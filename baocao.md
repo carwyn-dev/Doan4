@@ -98,7 +98,7 @@ Quy trình thực hiện gồm các bước: phân tích yêu cầu → thiết 
 
 - Hỗ trợ xây dựng **RESTful API** mạnh mẽ, dễ tích hợp với frontend.
 - Tích hợp sẵn **Dependency Injection**, giúp code có cấu trúc rõ ràng, dễ bảo trì.
-- Hỗ trợ **Entity Framework Core** để thao tác cơ sở dữ liệu thông qua ORM, giảm thiểu SQL thủ công.
+- Dự án sử dụng **Microsoft.Data.SqlClient** để gọi các thủ tục lưu trữ bằng tham số; các quy tắc giao dịch và ràng buộc dữ liệu được xử lý tại SQL Server.
 - Có cơ chế xác thực và phân quyền tích hợp (**JWT Authentication**), phù hợp với ba vai trò Customer, Staff, Admin trong hệ thống.
 - Hiệu năng cao, phù hợp với các nghiệp vụ cần xử lý đồng thời như đặt chỗ và kiểm tra khả dụng theo thời gian thực.
 
@@ -116,6 +116,6 @@ Quy trình thực hiện gồm các bước: phân tích yêu cầu → thiết 
 **Microsoft SQL Server** là hệ quản trị cơ sở dữ liệu quan hệ (RDBMS) được lựa chọn để lưu trữ dữ liệu của hệ thống vì:
 
 - Hỗ trợ tốt các ràng buộc quan hệ (khóa ngoại, khóa chính), phù hợp với mô hình dữ liệu có nhiều quan hệ liên kết giữa các entity như Reservation, ParkingSession, ParkingSlot.
-- Tích hợp chặt chẽ với **Entity Framework Core** trong hệ sinh thái .NET, thuận tiện cho quá trình phát triển.
+- Kết nối với ASP.NET Core qua **Microsoft.Data.SqlClient**; sử dụng stored procedure để tập trung quy tắc nghiệp vụ và quản lý giao dịch.
 - Hỗ trợ **transaction** và cơ chế khóa (locking) giúp xử lý an toàn các tình huống đặt chỗ đồng thời (race condition).
 - Công cụ quản lý trực quan với **SQL Server Management Studio (SSMS)**, dễ kiểm tra và theo dõi dữ liệu trong quá trình phát triển.

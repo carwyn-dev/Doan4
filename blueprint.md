@@ -73,7 +73,7 @@
 - Khách có thể hủy reservation còn CONFIRMED trước giờ bắt đầu. Khách chưa có tài khoản vẫn có thể gửi theo luồng walk-in.
 - Thời gian phải được chọn trước khi truy vấn khả dụng và chọn vị trí. Chọn xe cụ thể thuộc tài khoản, không chỉ chọn loại xe.
 - Giao diện cho phép chọn vị trí mong muốn. Nếu có sự cố vận hành, Staff chỉ đổi sang vị trí phù hợp cùng bãi khi khách đồng ý; nếu không phục vụ được phải ghi nhận rõ kết quả.
-- Gia hạn thời gian dự kiến là SHOULD HAVE; chỉ được gia hạn nếu không ảnh hưởng lịch đặt tiếp theo. Xe ở quá giờ vẫn cần được ghi nhận và xử lý theo mục 8.
+- Gia hạn thời gian dự kiến là SHOULD HAVE, **chưa triển khai**, nằm ở hướng phát triển; chỉ được gia hạn nếu không ảnh hưởng lịch đặt tiếp theo. Xe ở quá giờ vẫn cần được ghi nhận và xử lý theo mục 8.
 
 ### 3.2. Quy trình xe vào bãi
 
@@ -170,7 +170,7 @@ Ví dụ lịch CONFIRMED 08:00–10:00 khóa dự kiến đến 10:15. Nếu xe
 
 ### 5.3. Hiển thị sơ đồ
 
-Sơ đồ theo khung giờ hiển thị AVAILABLE, RESERVED, OCCUPIED, MAINTENANCE như kết quả truy vấn, kèm lý do không khả dụng. Trong sơ đồ hiện tại hoặc khi khoảng gửi đã chọn chồng thời gian đệm, hiển thị “Chờ sẵn sàng đến …” và vô hiệu hóa chọn vị trí; API trả bufferUntil và lý do BUFFER_ACTIVE, không thêm trạng thái lưu toàn cục mới. Khung giờ tương lai nằm sau buffer_until vẫn được xét, không vô hiệu hóa cả slot chỉ vì đang trong đệm hôm nay. RESERVED là nhãn suy ra từ lịch, không phải trạng thái lưu toàn cục của Slot. Sơ đồ hiện tại và sơ đồ theo thời gian phải có nhãn phân biệt, kèm thời điểm cập nhật dữ liệu.
+Bản hiện tại hiển thị danh sách nút vị trí đặt được theo xe và khung giờ; không hiển thị toàn bộ vị trí không khả dụng. Staff theo dõi trạng thái thực tế bằng bảng vị trí. Sơ đồ đầy đủ bốn nhãn AVAILABLE, RESERVED, OCCUPIED, MAINTENANCE và lý do không khả dụng là phần mở rộng chưa triển khai. Thiết kế mở rộng: Trong sơ đồ hiện tại hoặc khi khoảng gửi đã chọn chồng thời gian đệm, hiển thị “Chờ sẵn sàng đến …” và vô hiệu hóa chọn vị trí; API trả bufferUntil và lý do BUFFER_ACTIVE, không thêm trạng thái lưu toàn cục mới. Khung giờ tương lai nằm sau buffer_until vẫn được xét, không vô hiệu hóa cả slot chỉ vì đang trong đệm hôm nay. RESERVED là nhãn suy ra từ lịch, không phải trạng thái lưu toàn cục của Slot. Sơ đồ hiện tại và sơ đồ theo thời gian phải có nhãn phân biệt, kèm thời điểm cập nhật dữ liệu.
 
 ---
 
@@ -401,7 +401,7 @@ MVP không có POST /api/payments độc lập: Payment được tạo bởi l�
 
 ### Khách hàng
 - Trang chủ, Đăng nhập, Đăng ký — **bắt buộc**
-- Danh sách bãi, Chi tiết bãi (sơ đồ vị trí trống) — **bắt buộc**
+- Chọn bãi và danh sách vị trí đặt được theo xe/khung giờ — **bắt buộc**
 - Đặt chỗ (chọn loại xe, khu vực, vị trí, thời gian) — **bắt buộc**
 - Quản lý phương tiện — **bắt buộc**
 - Lịch sử đặt chỗ / lịch sử gửi xe — **nên có**
@@ -436,7 +436,7 @@ MVP không có POST /api/payments độc lập: Payment được tạo bởi l�
 - Báo cáo ngày dùng ngày tại Việt Nam, quy đổi ranh giới ngày sang UTC khi truy vấn. Khoảng lọc dùng [from, to) để tránh đếm hai lần tại ranh giới.
 - Tỷ lệ lấp đầy trung bình theo ngày/giờ là nâng cao, phải tính theo thời lượng hoặc mẫu đo, không lấy tỷ lệ hiện tại gắn cho ngày cũ.
 
-MVP dùng polling mỗi 15 giây cho sơ đồ/dashboard đang mở, chỉ khi tab hiển thị; tải lại ngay sau thao tác thành công. Hiển thị giờ cập nhật cuối và lỗi/mất kết nối. Dữ liệu “cập nhật gần thời gian thực” có thể cũ trong khoảng polling; backend luôn kiểm tra lại khi xác nhận. WebSocket/SignalR không bắt buộc.
+Bản hiện tại dùng polling mỗi 30 giây cho các trang theo dõi, kể cả khi tab ẩn; tạm dừng polling ở tab ẩn là cải tiến chưa triển khai; tải lại ngay sau thao tác thành công. Hiển thị giờ cập nhật cuối và lỗi/mất kết nối. Dữ liệu “cập nhật gần thời gian thực” có thể cũ trong khoảng polling; backend luôn kiểm tra lại khi xác nhận. WebSocket/SignalR không bắt buộc.
 
 ---
 
@@ -485,7 +485,7 @@ MVP dùng polling mỗi 15 giây cho sơ đồ/dashboard đang mở, chỉ khi t
 
 - Dashboard/báo cáo doanh thu và occupancy hiện tại theo định nghĩa mục 13.
 - Lịch sử đặt/gửi và hóa đơn cho khách; tra cứu và danh sách xe đang gửi cho Staff.
-- Giao diện quản lý user/phân công hoàn chỉnh; gia hạn có kiểm tra lịch; nâng cao trải nghiệm tìm kiếm và sơ đồ.
+- Giao diện quản lý user/phân công hoàn chỉnh; gia hạn có kiểm tra lịch và sơ đồ đầy đủ trạng thái là phần **chưa triển khai**; danh sách vị trí phù hợp đã có.
 
 ### NICE TO HAVE — nâng cao
 
@@ -537,8 +537,8 @@ Tài liệu này xác định thiết kế mục tiêu. Chỉ đánh dấu chứ
 | Thanh toán | Tại quầy; Staff xác nhận CASH/SIMULATED; tạo Payment cùng transaction đóng phiên |
 | Dữ liệu | 9 entity nghiệp vụ + AuditLog; thêm lưu yêu cầu chống lặp là dữ liệu hạ tầng |
 | API | Prefix /api, tài nguyên/hành động kebab-case; phân quyền và tính phí tại backend |
-| Cập nhật | Polling 15 giây, kiểm tra lại tại server khi ghi dữ liệu |
-| Phạm vi | MVP đúng nghiệp vụ trước; dashboard/QR/giữ chỗ tạm là các bước tiếp theo |
+| Cập nhật | Polling 30 giây, kiểm tra lại tại server khi ghi dữ liệu |
+| Phạm vi | Luồng MVP, dashboard/báo cáo và lịch sử đã triển khai; QR/giữ chỗ tạm/gia hạn/sơ đồ đầy đủ trạng thái là phần tiếp theo |
 
 **Lộ trình:**
 1. Chốt quy tắc mục 19–20; vẽ use case và sơ đồ trạng thái từ thiết kế này.
@@ -616,7 +616,7 @@ Tham khảo cơ chế transaction và đồng thời: [Microsoft — EF Core con
 | Đệm thực tế sau check-out | buffer_until = check_out_time + 15 phút | Áp dụng cả phiên đã COMPLETED và walk-in; hết đệm mới nhận xe, không tính phí |
 | Giải quyết sự cố khi khách đã đến | 15 phút từ service_issue_at | Quá hạn thì UNFULFILLED nếu chưa check-in |
 | Sửa lỗi biển số walk-in | 5 phút đầu của Session OPEN | Có lý do và audit; không sửa xe của reservation bằng API này |
-| Polling sơ đồ/dashboard | 15 giây | Chỉ tab hiển thị, luôn kiểm tra lại khi ghi |
+| Polling trang theo dõi/dashboard | 30 giây | Chưa tạm dừng ở tab ẩn; luôn kiểm tra lại khi ghi |
 | Giờ tính phí tối thiểu | 1 giờ | Kể cả ra trong vòng vài phút |
 
 Đây là quyết định thiết kế mặc định của đồ án, không phải quy định pháp lý hoặc chính sách giá thị trường. Giá và các tham số thời gian được cấu hình tại server; thay đổi cửa sổ no-show/đệm sau này chỉ áp dụng cho reservation mới. Nếu mở cấu hình này, phải lưu thêm buffer_minutes/early_check_in_minutes trên Reservation; expires_at đã lưu giữ nguyên deadline của lượt cũ. MVP giữ tham số thời gian cố định để tránh thay đổi lịch đã xác nhận.
