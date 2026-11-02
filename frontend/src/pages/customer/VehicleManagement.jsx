@@ -1,6 +1,7 @@
 import PageHeader from '../../components/PageHeader'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../../components/Layout'
+import useMutationRequest from '../../hooks/useMutationRequest'
 import { vehicleAPI, getErrorMessage } from '../../services/api'
 import {
   Box, Typography, Button, Card, Table, TableBody, TableCell,
@@ -21,15 +22,8 @@ function VehicleManagement() {
   const [editingId, setEditingId] = useState(null)
   const [formData, setFormData] = useState({ plateNumber: '', vehicleType: 'MOTORBIKE', isActive: true })
   const [error, setError] = useState('')
-  const [saving, setSaving] = useState(false)
-  const pendingRequest = useRef(null)
-  const requestKey = (operation, data) => {
-    const fingerprint = `${operation}:${JSON.stringify(data)}`
-    if (pendingRequest.current?.fingerprint !== fingerprint) {
-      pendingRequest.current = { fingerprint, key: crypto.randomUUID() }
-    }
-    return pendingRequest.current.key
-  }
+  const mutation = useMutationRequest()
+  const { saving } = mutation
 
   useEffect(() => { loadVehicles() }, [])
 
@@ -55,28 +49,18 @@ function VehicleManagement() {
       setFormData({ plateNumber: '', vehicleType: 'MOTORBIKE', isActive: true })
     }
     setError('')
-    pendingRequest.current = null
+    mutation.setError('')
     setOpenDialog(true)
   }
 
   const handleSubmit = async () => {
     if (saving) return
     if (!formData.plateNumber.trim()) { setError('Vui lòng nhập biển số xe'); return }
-    setSaving(true)
     const data = { ...formData, plateNumber: formData.plateNumber.trim() }
-    try {
-      if (editingId) {
-        await vehicleAPI.update(editingId, data, requestKey(`update:${editingId}`, data))
-      } else {
-        await vehicleAPI.create(data, requestKey('create', data))
-      }
+    if (await mutation.save(editingId ? `update:${editingId}` : 'create', data,
+      key => editingId ? vehicleAPI.update(editingId, data, key) : vehicleAPI.create(data, key))) {
       setOpenDialog(false)
-      pendingRequest.current = null
       await loadVehicles()
-    } catch (err) {
-      setError(getErrorMessage(err))
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -84,16 +68,7 @@ function VehicleManagement() {
     if (saving) return
     if (!window.confirm(vehicle.isActive ? 'Ngừng sử dụng xe này? Lịch sử gửi xe vẫn được giữ.' : 'Kích hoạt lại xe này?')) return
     const data = { plateNumber: vehicle.plateNumber, vehicleType: vehicle.vehicleType, isActive: !vehicle.isActive }
-    setSaving(true)
-    try {
-      await vehicleAPI.update(vehicle.id, data, requestKey(`toggle:${vehicle.id}`, data))
-      pendingRequest.current = null
-      await loadVehicles()
-    } catch (err) {
-      setError(getErrorMessage(err))
-    } finally {
-      setSaving(false)
-    }
+    if (await mutation.save(`toggle:${vehicle.id}`, data, key => vehicleAPI.update(vehicle.id, data, key))) await loadVehicles()
   }
 
   return (
@@ -102,6 +77,7 @@ function VehicleManagement() {
         <PageHeader title="Quản lý Phương tiện" eyebrow="Phương tiện của bạn" description="Thêm và quản lý xe để đặt chỗ nhanh hơn cho mỗi chuyến đi."
           action={<Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>Thêm xe</Button>} />
 
+        {mutation.error && !openDialog && <Alert severity="error" sx={{ mb: 2 }}>{mutation.error}</Alert>}
         {error && !openDialog && <Alert severity="error" sx={{ mb: 2 }} action={<Button onClick={loadVehicles} disabled={loading}>Tải lại</Button>}>{error}</Alert>}
         <Card sx={{ borderRadius: 3 }}>
           <TableContainer>
@@ -183,6 +159,7 @@ function VehicleManagement() {
             {editingId ? 'Chỉnh sửa phương tiện' : 'Thêm phương tiện mới'}
           </DialogTitle>
           <DialogContent>
+            {mutation.error && <Alert severity="error" sx={{ mb: 2 }}>{mutation.error}</Alert>}
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <TextField
               label="Biển số xe" fullWidth
