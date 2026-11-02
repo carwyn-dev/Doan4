@@ -32,9 +32,43 @@ public sealed partial class ParkingRepository(IConfiguration configuration)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync(cancellation);
-        await using var command = new SqlCommand("SELECT CASE WHEN OBJECT_ID(N'dbo.usp_GetLoginUser', N'P') IS NOT NULL AND OBJECT_ID(N'dbo.usp_SaveVehicle', N'P') IS NOT NULL THEN 1 ELSE 0 END", connection);
+        await using var command = new SqlCommand("""
+            SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM (VALUES
+                (N'dbo.usp_ExpireReservations'),
+                (N'dbo.usp_GetAvailability'),
+                (N'dbo.usp_CreateReservation'),
+                (N'dbo.usp_CancelReservation'),
+                (N'dbo.usp_ReservationServiceIssue'),
+                (N'dbo.usp_CheckIn'),
+                (N'dbo.usp_GetSessionFee'),
+                (N'dbo.usp_CheckOut'),
+                (N'dbo.usp_CorrectWalkInPlate'),
+                (N'dbo.usp_SetSlotMaintenance'),
+                (N'dbo.usp_RegisterCustomer'),
+                (N'dbo.usp_GetLoginUser'),
+                (N'dbo.usp_GetUserProfile'),
+                (N'dbo.usp_SaveVehicle'),
+                (N'dbo.usp_AdminSaveUser'),
+                (N'dbo.usp_AdminSaveParkingConfig'),
+                (N'dbo.usp_AdminSetPrice'),
+                (N'dbo.usp_GetMyVehicles'),
+                (N'dbo.usp_ListReservations'),
+                (N'dbo.usp_ListSessions'),
+                (N'dbo.usp_ListPayments'),
+                (N'dbo.usp_GetSlotOperations'),
+                (N'dbo.usp_AdminListUsers'),
+                (N'dbo.usp_GetOccupancy'),
+                (N'dbo.usp_AdminRevenueReport'),
+                (N'dbo.usp_GetTrafficReport'),
+                (N'dbo.usp_GetDashboard'),
+                (N'dbo.usp_AdminDailyReport')
+            ) AS required(name) WHERE OBJECT_ID(required.name,N'P') IS NULL)
+            AND (SELECT COUNT(DISTINCT name) FROM sys.dm_exec_describe_first_result_set_for_object(OBJECT_ID(N'dbo.usp_ListReservations'),0) WHERE error_number IS NULL AND name IN (N'resolution_deadline',N'can_record_issue',N'can_mark_unfulfilled'))=3
+            AND (SELECT COUNT(DISTINCT name) FROM sys.dm_exec_describe_first_result_set_for_object(OBJECT_ID(N'dbo.usp_ListSessions'),0) WHERE error_number IS NULL AND name IN (N'plate_correction_deadline',N'can_correct_plate'))=2
+            THEN 1 ELSE 0 END;
+            """, connection) { CommandTimeout = 20 };
         if (Convert.ToInt32(await command.ExecuteScalarAsync(cancellation)) != 1)
-            throw new ApiException(503, "DATABASE_NOT_READY", "Database chưa có các thủ tục nghiệp vụ. Hãy chạy mục 1 trong sql.md.");
+            throw new ApiException(503, "DATABASE_NOT_READY", "Database thiếu thủ tục hoặc chưa cập nhật đủ migration. Hãy kiểm tra sql.md và các script cập nhật trong README.");
     }
     public async Task<LoginUser?> GetLoginUserAsync(string email, CancellationToken cancellation)
     {

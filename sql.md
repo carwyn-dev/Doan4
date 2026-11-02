@@ -1608,6 +1608,9 @@ GO
 IF DATABASE_PRINCIPAL_ID(N'parking_backend') IS NULL
     EXEC(N'CREATE ROLE parking_backend AUTHORIZATION dbo;');
 GO
+-- Metadata cần cho kiểm tra cấu trúc kết quả, không cấp quyền đọc bảng riêng tư.
+GRANT VIEW DEFINITION ON OBJECT::dbo.usp_ListReservations TO parking_backend;
+GRANT VIEW DEFINITION ON OBJECT::dbo.usp_ListSessions TO parking_backend;
 GRANT SELECT ON OBJECT::dbo.ParkingLot TO parking_backend;
 GRANT SELECT ON OBJECT::dbo.Zone TO parking_backend;
 GRANT SELECT ON OBJECT::dbo.ParkingSlot TO parking_backend;
