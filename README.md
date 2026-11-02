@@ -29,7 +29,7 @@
 | Sự cố phục vụ | Staff xác nhận khách đã đến, ghi lý do và hạn xử lý; check-in để giải quyết hoặc kết thúc UNFULFILLED; quá hạn được job xử lý, khách xem lý do trong lịch sử |
 | Sửa biển số walk-in | Staff sửa lỗi trong 5 phút đầu của phiên OPEN; đối chiếu xe và lý do bắt buộc; chống trùng biển số, giữ tài khoản/xe/giờ vào/giá |
 
-Các trang đã nối dữ liệu không hiển thị số liệu mẫu khi lỗi kết nối. Dashboard và báo cáo hiện phản ánh dữ liệu SQL thật. Chưa chỉnh các tệp báo cáo học phần trong giai đoạn tiếp tục phát triển ứng dụng này.
+Các trang đã nối dữ liệu không hiển thị số liệu mẫu khi lỗi kết nối. Dashboard và báo cáo hiện phản ánh dữ liệu SQL thật. Phần cơ sở lý thuyết trong baocao.md đã được đối chiếu với SqlClient và stored procedure. Tệp chuong4.md cũ đã được xóa theo yêu cầu; nội dung Chương 4 và kết luận đã soạn trong chat để đưa vào bản báo cáo riêng.
 
 ## Giao diện
 
@@ -65,6 +65,12 @@ Bản xử lý sự cố ngày 25/10 bổ sung hạn xử lý và các cờ thao
 
 ```powershell
 sqlcmd -S localhost -d ParkingLotOnline -E -C -b -f 65001 -i scripts/sql/20261025_staff_exceptions.sql
+```
+
+Bản kiểm tra sẵn sàng ngày 02/11 kiểm tra các procedure nghiệp vụ và metadata kết quả của lịch đặt/lượt gửi, phát hiện database thiếu migration thay vì chỉ xác nhận kết nối. Role `parking_backend` cần quyền xem định nghĩa của đúng hai procedure này; migration dưới đây chỉ bổ sung quyền metadata, không đổi bảng hoặc dữ liệu. Máy hiện tại đã được áp dụng.
+
+```powershell
+sqlcmd -S localhost -d ParkingLotOnline -E -C -b -f 65001 -i scripts/sql/20261102_readiness.sql
 ```
 
 Mở hai cửa sổ PowerShell tại `C:\Code\doan4`:
@@ -281,7 +287,7 @@ Hai thủ tục mới đọc trong transaction với shared application lock cù
 - `dotnet build backend/ParkingLotAPI.csproj --no-restore`: thành công, 0 lỗi/cảnh báo.
 - Đóng gói frontend bằng Vite: thành công. Có cảnh báo kích thước bundle hiện tại; chưa thực hiện chia nhỏ theo route.
 - `tests/auth_vehicles_integration.py`: 50 kiểm tra HTTP/dữ liệu, gồm đăng ký, mật khẩu sai, phạm vi xe, request lặp, dữ liệu lưu thật, đổi vai trò và khóa tài khoản khi token vẫn còn hạn.
-- `tests/ui-auth-vehicles.cjs`: trình duyệt kiểm tra lỗi đăng nhập, đăng nhập thật, thêm/sửa/ngừng xe, lưu sau reload, chặn route sai quyền, bỏ quyền giả trong localStorage và bỏ token mock cũ; không có lỗi JavaScript ở trang.
+- `tests/ui-auth-vehicles.cjs`: kiểm tra mất phản hồi sau khi thêm xe, đóng/mở lại biểu mẫu vẫn gửi cùng khóa và nhận lại kết quả đã lưu; trình duyệt kiểm tra lỗi đăng nhập, đăng nhập thật, thêm/sửa/ngừng xe, lưu sau reload, chặn route sai quyền, bỏ quyền giả trong localStorage và bỏ token mock cũ; không có lỗi JavaScript ở trang.
 - Các kiểm tra tạo tài khoản riêng có tên ngẫu nhiên và dọn đúng dữ liệu của các tài khoản đó. Không xóa dữ liệu demo hoặc tài khoản người dùng khác.
 - `tests/reservations_integration.py`: kiểm tra HTTP + SQL về thời gian/múi giờ, chủ xe/lịch, đặt đồng thời cùng chỗ, trùng lịch xe, replay đồng thời, hủy, phân trang, trạng thái hết hạn và audit của tác vụ nền thật. Bài kiểm tra đợi tối đa 70 giây cho chu kỳ hết hạn mặc định.
 - `tests/ui-reservations.cjs`: kiểm tra trình duyệt chọn xe đang hoạt động, tìm/đặt thật, xung đột 409, giả lập mất phản hồi sau khi SQL commit rồi gửi lại cùng key, giờ Việt Nam trong trình duyệt UTC, reload lịch sử/hủy và hiển thị lỗi kết nối thay cho dữ liệu mẫu.
@@ -314,7 +320,7 @@ dotnet build backend/ParkingLotAPI.csproj --no-restore
 python tests/run_admin_tests.py --node DUONG_DAN_NODE_EXE --node-modules DUONG_DAN_NODE_MODULES_CO_PLAYWRIGHT
 ```
 
-Bộ điều phối tự tạo `ParkingAdminVerify_<mã ngẫu nhiên>`, khởi tạo bằng mục 1 của `sql.md`, chạy lại các migration để kiểm tra, mở backend/frontend riêng ở các cổng trống, chạy kiểm thử bãi/giá, dashboard/báo cáo, bảo trì Staff, sự cố, nhận/trả xe, phương tiện/đặt chỗ, giao diện và tài khoản rồi dừng đúng tiến trình và xóa đúng database do nó tạo. Có thể chọn `--suite parking`, `--suite users`, `--suite reports`, `--suite maintenance`, `--suite operations`, `--suite sessions`, `--suite customer` hoặc `--suite design` khi chỉ cần kiểm tra một phần. Các bài kiểm thử mới từ chối tên database khác mẫu này; các bài nhận/trả xe cũ cũng dùng database tạm khi chạy qua bộ điều phối. Không cần mở ứng dụng chính; Node ưu tiên PATH rồi runtime Codex nếu có, các tham số Node có thể bỏ qua trên máy hiện tại. Bài sự cố có thể đợi tối đa 70 giây để quan sát job thực tế. Log và ảnh kiểm tra nằm trong `.work/`, không đưa lên Git.
+Bộ điều phối tự tạo `ParkingAdminVerify_<mã ngẫu nhiên>`, khởi tạo bằng mục 1 của `sql.md`, chạy lại các migration để kiểm tra, mở backend/frontend riêng ở các cổng trống, chạy kiểm thử bãi/giá, dashboard/báo cáo, bảo trì Staff, sự cố, nhận/trả xe, phương tiện/đặt chỗ, giao diện và tài khoản rồi dừng đúng tiến trình và xóa đúng database do nó tạo. Có thể chọn `--suite parking`, `--suite users`, `--suite reports`, `--suite maintenance`, `--suite operations`, `--suite sessions`, `--suite customer`, `--suite design` hoặc `--suite readiness` khi chỉ cần kiểm tra một phần. Các bài kiểm thử mới từ chối tên database khác mẫu này; các bài nhận/trả xe cũ cũng dùng database tạm khi chạy qua bộ điều phối. Không cần mở ứng dụng chính; Node ưu tiên PATH rồi runtime Codex nếu có, các tham số Node có thể bỏ qua trên máy hiện tại. Bài sự cố có thể đợi tối đa 70 giây để quan sát job thực tế. Log và ảnh kiểm tra nằm trong `.work/`, không đưa lên Git.
 
 Kiểm tra riêng các phần giao diện vừa cập nhật:
 
@@ -328,3 +334,10 @@ python tests/run_admin_tests.py --suite design
 ## Phần tiếp theo
 
 Các luồng sự cố phục vụ, sửa biển số và trạng thái/bảo trì cho Staff đã có API/giao diện và kiểm thử. Tiếp theo nên rà soát các yêu cầu còn lại trong blueprint, chuẩn bị kịch bản demo và hoàn thiện báo cáo học phần. Các chức năng nâng cao như xuất báo cáo thành tệp và tự đổi mật khẩu chưa thuộc bản này.
+
+## Các chỉnh sửa sau rà soát ngày 02/11/2026
+
+- Phương tiện dùng cơ chế khóa thử lại chung, giữ các yêu cầu chưa rõ kết quả qua đóng/mở biểu mẫu.
+- `tests/readiness_integration.py` kiểm tra thiếu procedure, procedure trả schema cũ, khôi phục migration và quyền metadata của role backend trên database tạm.
+- Blueprint công bố đúng chu kỳ 30 giây. Tạm dừng tải ở tab ẩn, sơ đồ đầy đủ trạng thái và gia hạn còn thuộc phần chưa triển khai; bản hiện tại cho khách chọn danh sách vị trí đặt được và Staff xem bảng trạng thái.
+- Tệp chương 4 cũ đã được xóa. Những sơ đồ và minh chứng cho báo cáo Word riêng cần được hoàn thiện theo yêu cầu học phần.
