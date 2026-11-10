@@ -73,6 +73,12 @@ Bản kiểm tra sẵn sàng ngày 02/11 kiểm tra các procedure nghiệp vụ
 sqlcmd -S localhost -d ParkingLotOnline -E -C -b -f 65001 -i scripts/sql/20261102_readiness.sql
 ```
 
+Tra lượt đặt theo biển số cần bản mới của `dbo.usp_ListReservations`. Với database đã khởi tạo, chạy lệnh sau rồi khởi động lại backend. Có thể mở cùng file SQL trong SSMS và nhấn **F5**. Script chỉ cập nhật thủ tục tra cứu. Database tạo mới bằng mục 1 của `sql.md` đã có thủ tục này.
+
+```powershell
+sqlcmd -S localhost -d ParkingLotOnline -E -C -b -f 65001 -i scripts/sql/20261111_staff_reservation_plate.sql
+```
+
 Mở hai cửa sổ PowerShell tại `C:\Code\doan4`:
 
 **Cửa sổ 1 — backend:**
@@ -114,6 +120,8 @@ npm run dev
 | Quản trị viên | `admin@parking.test` | `123456` |
 
 Đây là tài khoản seed từ SQL. Các email `customer@test.com`, `staff@test.com`, `admin@test.com` của bản mô phỏng trước đây không còn được dùng để đăng nhập. Đăng ký tài khoản mới yêu cầu mật khẩu từ 8 đến 128 ký tự; vai trò luôn là Customer.
+
+Để thêm dữ liệu trình diễn sau khi khởi tạo, mở `scripts/sql/demo_data.sql` trong SSMS và chạy toàn bộ file. Script nạp khách hàng hư cấu, xe, lịch đặt, lượt gửi và phiếu thu cho hai bãi demo. Chạy lại sẽ hiện số lượng đã nạp và giữ nguyên dữ liệu. Các khách hàng mẫu dùng email `@parking.test` và mật khẩu demo `123456`.
 
 Để thử phần đã tích hợp, đăng nhập khách hàng → **Phương tiện** → thêm/sửa/ngừng sử dụng xe → tải lại trang để đối chiếu. Ngừng sử dụng không xóa phương tiện hoặc lịch sử. Xe có lịch đặt/phiên đang gửi không được sửa theo quy tắc trong SQL.
 
@@ -291,8 +299,8 @@ Hai thủ tục mới đọc trong transaction với shared application lock cù
 - Các kiểm tra tạo tài khoản riêng có tên ngẫu nhiên và dọn đúng dữ liệu của các tài khoản đó. Không xóa dữ liệu demo hoặc tài khoản người dùng khác.
 - `tests/reservations_integration.py`: kiểm tra HTTP + SQL về thời gian/múi giờ, chủ xe/lịch, đặt đồng thời cùng chỗ, trùng lịch xe, replay đồng thời, hủy, phân trang, trạng thái hết hạn và audit của tác vụ nền thật. Bài kiểm tra đợi tối đa 70 giây cho chu kỳ hết hạn mặc định.
 - `tests/ui-reservations.cjs`: kiểm tra trình duyệt chọn xe đang hoạt động, tìm/đặt thật, xung đột 409, giả lập mất phản hồi sau khi SQL commit rồi gửi lại cùng key, giờ Việt Nam trong trình duyệt UTC, reload lịch sử/hủy và hiển thị lỗi kết nối thay cho dữ liệu mẫu.
-- `tests/sessions_integration.py`: 81 kiểm tra về phân quyền/chủ lượt/bãi, đổi vị trí và audit, check-in/checkout đồng thời, replay, số tiền sai, phí server, một thanh toán duy nhất, khoảng đệm, walk-in và phiếu thu của Customer.
-- `tests/ui-sessions.cjs`: trình duyệt kiểm tra nhận xe đặt trước và walk-in, mất phản hồi khi nhận xe/thu tiền, phí thay đổi phải xác nhận lại, phiếu thu đã lưu và màn hình chỉ đọc của Customer; kiểm tra bố cục phiếu thu trên màn hình nhỏ.
+- `tests/sessions_integration.py`: kiểm tra tra lượt đặt theo biển số và mã RS, phạm vi bãi, đổi vị trí và audit, check-in/checkout đồng thời, replay, phí, thanh toán, khoảng đệm, walk-in và phiếu thu của Customer.
+- `tests/ui-sessions.cjs`: kiểm tra tra biển số và chọn khung giờ, nhận xe đặt trước và walk-in, mất phản hồi khi nhận xe hoặc thu tiền, xác nhận lại khi phí đổi, phiếu thu đã lưu và màn hình chỉ đọc của Customer. Kiểm tra cả giao diện tra cứu và phiếu thu trên màn hình nhỏ.
 - `tests/admin_integration.py`: 128 kiểm tra HTTP/SQL về quyền Admin, kiểm tra biểu mẫu, lưu/đọc cấu hình, ngừng/kích hoạt, cha không hoạt động, cấu hình đang có giao dịch, bảo trì, audit, replay đồng thời, phiên bản giá và snapshot phí xe đã vào.
 - `tests/ui-admin.cjs`: trình duyệt thêm/sửa/ngừng/kích hoạt bãi, khu, vị trí; bật/tắt bảo trì, lỗi xung đột thật từ SQL, sửa/xem lịch sử giá, reload và mất phản hồi sau commit. Kiểm tra giao diện nhỏ và lỗi đọc dữ liệu.
 - `tests/users_integration.py`: 121 kiểm tra quyền, dữ liệu đầu vào, tạo/replay đồng thời có mật khẩu, audit, tìm kiếm/lọc/phân trang, phân công và vai trò trên token cũ, khóa/mở, giữ Admin cuối cùng, giao dịch đang mở, lịch sử và quyền database của backend.
