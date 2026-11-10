@@ -78,7 +78,7 @@ try:
     with (work / 'init.log').open('w', encoding='utf-8') as log:
         subprocess.run([sqlcmd, '-S', 'localhost', '-E', '-C', '-b', '-f', '65001', '-i', str(init)], stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120, **hidden)
     # Kiểm tra migration chạy lặp được và khớp với script khởi tạo mới.
-    for filename in ['20261022_admin_users.sql', '20261022_reports.sql', '20261025_staff_exceptions.sql', '20261102_readiness.sql']:
+    for filename in ['20261022_admin_users.sql', '20261022_reports.sql', '20261025_staff_exceptions.sql', '20261102_readiness.sql', '20261111_staff_reservation_plate.sql']:
         migration = work / filename
         migration.write_text((ROOT / 'scripts/sql' / filename).read_text(encoding='utf-8').replace('ParkingLotOnline', database), encoding='utf-8')
         with (work / (filename + '.log')).open('w', encoding='utf-8') as log:

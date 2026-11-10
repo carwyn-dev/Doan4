@@ -47,6 +47,10 @@ try:
 finally:
     migration('20261025_staff_exceptions.sql')
     migration('20261102_readiness.sql')
+try:
+    health(503)  # Có schema kết quả mới nhưng chưa hỗ trợ tìm biển số.
+finally:
+    migration('20261111_staff_reservation_plate.sql')
 health(200)
 # Verify metadata inspection works with the intended limited database role.
 source = (ROOT / 'backend/Data/ParkingRepository.cs').read_text(encoding='utf-8')

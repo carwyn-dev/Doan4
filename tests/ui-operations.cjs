@@ -19,8 +19,8 @@ async function login(email,role) {
   return { context,tab };
 }
 async function lookup(reservation) {
-  await page.getByLabel(/Mã đặt chỗ/).fill(reservation.reservationCode);
-  await page.getByRole('button',{ name:'Tra cứu mã đặt chỗ',exact:true }).click();
+  await page.getByLabel('Biển số hoặc mã đặt chỗ').fill(reservation.reservationCode);
+  await page.getByRole('button',{ name:'Tra cứu',exact:true }).click();
   await page.getByRole('button',{ name:'Cập nhật lượt đặt',exact:true }).waitFor();
 }
 async function form(reason) {
@@ -79,7 +79,7 @@ function sql(statement) {
   await dialog().getByText(/không còn trong thời gian/).waitFor();
   await dialog().getByRole('button',{ name:'Đóng',exact:true }).click();
   await page.getByRole('button',{ name:'Cập nhật lượt đặt',exact:true }).click();
-  await page.getByText(/Trạng thái: UNFULFILLED/).waitFor();
+  await page.getByRole('region', { name: 'Phiếu đặt chỗ' }).getByText('Không phục vụ được', { exact: true }).waitFor();
   assert.equal(await page.getByRole('button',{ name:'Xác nhận xe vào',exact:true }).count(),0);
 
   await page.goto('/staff/checkout?query='+fixture.walk.sessionCode);

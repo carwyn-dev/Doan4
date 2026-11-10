@@ -41,6 +41,14 @@ public sealed class StaffOperationsController(ParkingRepository repository) : Co
         var rows = await repository.GetReservationsAsync(ActorId, null, 1, 1, cancellation, code);
         return rows.Count == 0 ? throw new ApiException(404, "NOT_FOUND", "Không tìm thấy mã đặt chỗ trong bãi được phân công.") : Ok(rows[0]);
     }
+    [HttpGet("reservations/by-plate")]
+    public async Task<IActionResult> ReservationsByPlate([FromQuery, Required, StringLength(32)] string plate, CancellationToken cancellation)
+    {
+        var normalized = plate.ToUpperInvariant().Replace(" ", "").Replace("-", "").Replace(".", "");
+        if (!Regex.IsMatch(normalized, @"\A[A-Z0-9]{3,20}\z"))
+            throw new ApiException(400, "INVALID_INPUT", "Nhập biển số hợp lệ, ví dụ 59-Z2 928.41.");
+        return Ok(await repository.GetReservationsAsync(ActorId, null, 1, 1, cancellation, plate: plate));
+    }
 }
 
 [ApiController, Route("api/sessions"), Authorize(Roles = "Customer,Staff")]

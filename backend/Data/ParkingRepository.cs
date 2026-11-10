@@ -63,6 +63,7 @@ public sealed partial class ParkingRepository(IConfiguration configuration)
                 (N'dbo.usp_GetDashboard'),
                 (N'dbo.usp_AdminDailyReport')
             ) AS required(name) WHERE OBJECT_ID(required.name,N'P') IS NULL)
+            AND EXISTS (SELECT 1 FROM sys.parameters WHERE object_id=OBJECT_ID(N'dbo.usp_ListReservations') AND name=N'@Plate')
             AND (SELECT COUNT(DISTINCT name) FROM sys.dm_exec_describe_first_result_set_for_object(OBJECT_ID(N'dbo.usp_ListReservations'),0) WHERE error_number IS NULL AND name IN (N'resolution_deadline',N'can_record_issue',N'can_mark_unfulfilled'))=3
             AND (SELECT COUNT(DISTINCT name) FROM sys.dm_exec_describe_first_result_set_for_object(OBJECT_ID(N'dbo.usp_ListSessions'),0) WHERE error_number IS NULL AND name IN (N'plate_correction_deadline',N'can_correct_plate'))=2
             THEN 1 ELSE 0 END;
