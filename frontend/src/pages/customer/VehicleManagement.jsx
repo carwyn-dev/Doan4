@@ -6,14 +6,9 @@ import { vehicleAPI, getErrorMessage } from '../../services/api'
 import {
   Box, Typography, Button, Card, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField, Select, MenuItem,
-  FormControl, InputLabel, Chip, Alert, IconButton, Tooltip, Avatar
+  DialogContent, DialogActions, TextField, MenuItem, Stack, Chip, Alert
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
-import EditIcon from '@mui/icons-material/Edit'
-import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew'
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
-import TwoWheelerIcon from '@mui/icons-material/TwoWheeler'
 
 function VehicleManagement() {
   const [vehicles, setVehicles] = useState([])
@@ -73,79 +68,46 @@ function VehicleManagement() {
 
   return (
     <Layout>
-      <Box>
-        <PageHeader title="Quản lý Phương tiện" eyebrow="Phương tiện của bạn" description="Thêm và quản lý xe để đặt chỗ nhanh hơn cho mỗi chuyến đi."
+      <Box sx={{ maxWidth: 960 }}>
+        <PageHeader title="Phương tiện" description="Thêm xe hoặc cập nhật biển số để dùng khi đặt chỗ."
           action={<Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>Thêm xe</Button>} />
 
         {mutation.error && !openDialog && <Alert severity="error" sx={{ mb: 2 }}>{mutation.error}</Alert>}
         {error && !openDialog && <Alert severity="error" sx={{ mb: 2 }} action={<Button onClick={loadVehicles} disabled={loading}>Tải lại</Button>}>{error}</Alert>}
-        <Card sx={{ borderRadius: 3 }}>
+        <Card>
           <TableContainer>
-            <Table>
+            <Table aria-label="Danh sách phương tiện" sx={{ tableLayout: 'fixed', '& .MuiTableCell-root': { px: { xs: 1.5, sm: 2 }, overflowWrap: 'anywhere' } }}>
               <TableHead>
-                <TableRow sx={{ bgcolor: '#f7f9fa' }}>
-                  <TableCell sx={{ fontWeight: 700, color: '#087f73' }}>STT</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: '#087f73' }}>Biển số xe</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: '#087f73' }}>Loại xe</TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: '#087f73' }}>Trạng thái</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700, color: '#087f73' }}>Thao tác</TableCell>
+                <TableRow>
+                  <TableCell>Phương tiện</TableCell>
+                  <TableCell sx={{ width: { xs: '43%', sm: '34%' } }}>Thao tác</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4 }}>Đang tải...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={2}>Đang tải phương tiện…</TableCell></TableRow>
                 ) : vehicles.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
-                      <TwoWheelerIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1 }} />
-                      <Typography color="text.secondary">Chưa có phương tiện nào</Typography>
-                      <Button variant="contained" sx={{ mt: 2 }} onClick={() => handleOpenDialog()}>Thêm xe ngay</Button>
+                    <TableCell colSpan={2}>
+                      <Typography variant="body2" color="text.secondary">{error ? 'Chưa tải được danh sách phương tiện.' : 'Chưa có phương tiện nào. Thêm xe để bắt đầu đặt chỗ.'}</Typography>
                     </TableCell>
                   </TableRow>
-                ) : vehicles.map((vehicle, index) => (
-                  <TableRow key={vehicle.id} hover sx={{ '&:hover': { bgcolor: '#f7f9fa' } }}>
-                    <TableCell sx={{ color: '#64748b' }}>{index + 1}</TableCell>
+                ) : vehicles.map(vehicle => (
+                  <TableRow key={vehicle.id}>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Avatar sx={{ bgcolor: vehicle.vehicleType === 'CAR' ? '#edf6f2' : '#f1f6f8', width: 36, height: 36 }}>
-                          {vehicle.vehicleType === 'CAR'
-                            ? <DirectionsCarIcon sx={{ color: '#087f73', fontSize: 20 }} />
-                            : <TwoWheelerIcon sx={{ color: '#386989', fontSize: 20 }} />}
-                        </Avatar>
-                        <Typography sx={{ fontWeight: 700, fontSize: 15 }}>{vehicle.plateNumber}</Typography>
-                      </Box>
+                      <Typography sx={{ fontWeight: 700, fontSize: 15 }}>{vehicle.plateNumber}</Typography>
+                      <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap', alignItems: 'center', mt: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary">{vehicle.vehicleType === 'CAR' ? 'Ô tô' : 'Xe máy'}</Typography>
+                        <Chip size="small" label={vehicle.isActive ? 'Đang sử dụng' : 'Đã ngừng sử dụng'} color={vehicle.isActive ? 'success' : 'default'} />
+                      </Stack>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={vehicle.vehicleType === 'CAR' ? 'Ô tô' : 'Xe máy'}
-                        size="small"
-                        sx={{
-                          bgcolor: vehicle.vehicleType === 'CAR' ? '#edf6f2' : '#f1f6f8',
-                          color: vehicle.vehicleType === 'CAR' ? '#087f73' : '#386989',
-                          fontWeight: 600, border: 'none'
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell><Chip size="small" label={vehicle.isActive ? 'Đang sử dụng' : 'Đã ngừng sử dụng'} color={vehicle.isActive ? 'success' : 'default'} /></TableCell>
-                    <TableCell align="center">
-                      <Tooltip title="Chỉnh sửa">
-                        <IconButton
-                          disabled={saving}
-                          onClick={() => handleOpenDialog(vehicle)}
-                          sx={{ color: '#087f73', '&:hover': { bgcolor: '#edf6f2' } }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={vehicle.isActive ? 'Ngừng sử dụng' : 'Kích hoạt lại'}>
-                        <IconButton
-                          disabled={saving}
-                          onClick={() => handleToggle(vehicle)}
-                          sx={{ color: '#dc2626', '&:hover': { bgcolor: '#fff1f1' } }}
-                        >
-                          <PowerSettingsNewIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ alignItems: 'flex-start', gap: 0.5, flexWrap: 'wrap' }}>
+                        <Button size="small" disabled={saving} onClick={() => handleOpenDialog(vehicle)}>Chỉnh sửa</Button>
+                        <Button size="small" disabled={saving} color={vehicle.isActive ? 'warning' : 'success'} onClick={() => handleToggle(vehicle)}>
+                          {vehicle.isActive ? 'Ngừng sử dụng' : 'Kích hoạt lại'}
+                        </Button>
+                      </Stack>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -154,8 +116,8 @@ function VehicleManagement() {
           </TableContainer>
         </Card>
 
-        <Dialog open={openDialog} onClose={() => !saving && setOpenDialog(false)} maxWidth="xs" fullWidth>
-          <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
+        <Dialog open={openDialog} onClose={() => !saving && setOpenDialog(false)} maxWidth="xs" fullWidth aria-labelledby="vehicle-dialog-title">
+          <DialogTitle id="vehicle-dialog-title" sx={{ pb: 1 }}>
             {editingId ? 'Chỉnh sửa phương tiện' : 'Thêm phương tiện mới'}
           </DialogTitle>
           <DialogContent>
@@ -167,13 +129,10 @@ function VehicleManagement() {
               onChange={(e) => setFormData({ ...formData, plateNumber: e.target.value })}
               placeholder="VD: 29A-12345" margin="normal"
             />
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Loại xe</InputLabel>
-              <Select value={formData.vehicleType} label="Loại xe" onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}>
-                <MenuItem value="MOTORBIKE">🛵 Xe máy</MenuItem>
-                <MenuItem value="CAR">🚗 Ô tô</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField select fullWidth margin="normal" value={formData.vehicleType} label="Loại xe" onChange={e => setFormData({ ...formData, vehicleType: e.target.value })}>
+              <MenuItem value="MOTORBIKE">Xe máy</MenuItem>
+              <MenuItem value="CAR">Ô tô</MenuItem>
+            </TextField>
           </DialogContent>
           <DialogActions sx={{ p: 2.5, gap: 1 }}>
             <Button onClick={() => setOpenDialog(false)} disabled={saving} variant="outlined">Hủy</Button>

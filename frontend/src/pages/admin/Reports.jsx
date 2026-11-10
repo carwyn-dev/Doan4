@@ -1,9 +1,10 @@
 import PageHeader from '../../components/PageHeader'
 import { useEffect, useState } from 'react'
-import { Alert, Box, Button, Card, MenuItem, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Card, MenuItem, Stack, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from '@mui/material'
 import Layout from '../../components/Layout'
+import ScrollTable from '../../components/ScrollTable'
 import { adminAPI, getErrorMessage } from '../../services/api'
-import { StatCards, RevenueChart, reportDate, vietnamDate, shiftDate } from '../../components/ReportingWidgets'
+import { StatStrip, RevenueChart, reportDate, vietnamDate, shiftDate } from '../../components/ReportingWidgets'
 import { formatMoney } from '../../components/SessionReceipt'
 import { formatParkingTime } from '../../utils/reservationTime'
 
@@ -41,46 +42,46 @@ export default function Reports() {
   }
   const totals = data?.totals
   return <Layout>
-    <PageHeader title={'Báo cáo vận hành'} description={'Lượt xe và tổng thu đã ghi nhận theo ngày Việt Nam.'} eyebrow="Phân tích & thống kê" action={<Button variant="outlined" disabled={loading} onClick={() => setRevision(r => r + 1)}>Làm mới</Button>} />
-    <Box component="form" onSubmit={submit} sx={{ mb: 3, p: { xs: 2, sm: 2.5 }, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2, flexWrap: 'wrap', mb: 2 }}>
-        <TextField label="Từ ngày" required type="date" value={draft.fromDate} onChange={e => setDraft(f => ({ ...f, fromDate: e.target.value }))}
+    <PageHeader title="Báo cáo vận hành" description="Lượt xe và tổng thu đã ghi nhận theo ngày Việt Nam." action={<Button variant="outlined" disabled={loading} onClick={() => setRevision(r => r + 1)}>Làm mới</Button>} />
+    <Box component="form" aria-label="Lọc báo cáo" onSubmit={submit} sx={{ mb: 2.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'minmax(135px, 155px) minmax(135px, 155px) minmax(170px, 240px) auto' }, justifyContent: { md: 'start' }, gap: 1.25, mb: 1.25 }}>
+        <TextField label="Từ ngày" size="small" required type="date" value={draft.fromDate} onChange={e => setDraft(f => ({ ...f, fromDate: e.target.value }))}
           slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: '2000-01-01', max: '2099-12-31' } }} />
-        <TextField label="Đến hết ngày" required type="date" value={draft.toDate} onChange={e => setDraft(f => ({ ...f, toDate: e.target.value }))}
+        <TextField label="Đến hết ngày" size="small" required type="date" value={draft.toDate} onChange={e => setDraft(f => ({ ...f, toDate: e.target.value }))}
           slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: '2000-01-01', max: '2099-12-31' } }} />
-        <TextField select label="Bãi đỗ xe" value={draft.parkingLotId} sx={{ minWidth: 220 }} onChange={e => setDraft(f => ({ ...f, parkingLotId: e.target.value }))}>
+        <TextField select size="small" label="Bãi đỗ xe" value={draft.parkingLotId} onChange={e => setDraft(f => ({ ...f, parkingLotId: e.target.value }))}>
           <MenuItem value="all">Tất cả bãi</MenuItem>{lots.map(l => <MenuItem key={l.id} value={l.id}>{l.name}{!l.isActive ? ' (ngừng hoạt động)' : ''}</MenuItem>)}
         </TextField><Button type="submit" variant="contained">Xem báo cáo</Button>
-      </Stack>
+      </Box>
       <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>{[['today', 'Hôm nay'], ['week', '7 ngày'], ['month', 'Tháng này']].map(([id, label]) => <Button key={id} variant="outlined" size="small" onClick={() => preset(id)}>{label}</Button>)}</Stack>
     </Box>
     {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
     {loading && <Typography role="status">Đang tải báo cáo...</Typography>}
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error} Nhấn Làm mới để thử lại.</Alert>}
     {data && <>
-      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>Từ {reportDate(data.fromDate)} đến hết {reportDate(data.toDate)} · {data.parkingLotId ? lots.find(l => l.id === data.parkingLotId)?.name : 'Tất cả bãi'} · Cập nhật {formatParkingTime(data.generatedAt)}</Typography>
-      <StatCards items={[
+      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5 }}>Từ {reportDate(data.fromDate)} đến hết {reportDate(data.toDate)}. {data.parkingLotId ? lots.find(l => l.id === data.parkingLotId)?.name : 'Tất cả bãi'}. Cập nhật {formatParkingTime(data.generatedAt)}.</Typography>
+      <StatStrip items={[
         { label: 'Lượt xe vào', value: totals.checkInCount }, { label: 'Lượt xe ra', value: totals.checkOutCount },
         { label: 'Phiếu thu đã ghi nhận', value: totals.paymentCount }, { label: 'Tổng thu ghi nhận', value: formatMoney(totals.revenueVnd) }
       ]} />
-      <Alert severity="info" sx={{ mb: 2 }}>Tiền mặt: {formatMoney(totals.cashRevenueVnd)} · Mô phỏng: {formatMoney(totals.simulatedRevenueVnd)}. Tổng thu tính theo ngày ghi nhận phiếu thu, có thể khác ngày xe vào hoặc xe ra. Khoảng ngày tính cả ngày bắt đầu và kết thúc.</Alert>
-      <Card sx={{ p: 2, mb: 2 }}><Typography variant="h6">Tổng thu theo ngày</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Tiền mặt {formatMoney(totals.cashRevenueVnd)}, thanh toán mô phỏng {formatMoney(totals.simulatedRevenueVnd)}. Tổng thu tính theo ngày ghi nhận phiếu thu.</Typography>
+      <Card sx={{ p: 2, mb: 2 }}><Typography component="h2" variant="h6">Tổng thu theo ngày</Typography>
         {totals.paymentCount ? <RevenueChart days={data.days} /> : <Typography sx={{ color: 'text.secondary', mt: 2 }}>Chưa có phiếu thu trong khoảng ngày này.</Typography>}
       </Card>
-      <Typography variant="h6" sx={{ mb: 1 }}>Chi tiết theo ngày</Typography>
-      <TableContainer component={Card} sx={{ mb: 2 }}><Table sx={{ minWidth: 750 }}>
+      <Typography component="h2" variant="h6" sx={{ mb: 1 }}>Chi tiết theo ngày</Typography>
+      <ScrollTable label="Chi tiết theo ngày" minWidth={700} sx={{ mb: 2 }}>
         <TableHead><TableRow>{['Ngày', 'Lượt vào', 'Lượt ra', 'Phiếu thu', 'Tổng thu', 'Tiền mặt', 'Mô phỏng'].map(t => <TableCell key={t}>{t}</TableCell>)}</TableRow></TableHead>
         <TableBody>{data.days.map(d => <TableRow key={d.date}><TableCell>{reportDate(d.date)}</TableCell><TableCell>{d.checkInCount}</TableCell><TableCell>{d.checkOutCount}</TableCell>
           <TableCell>{d.paymentCount}</TableCell><TableCell sx={{ fontWeight: 600 }}>{formatMoney(d.revenueVnd)}</TableCell><TableCell>{formatMoney(d.cashRevenueVnd)}</TableCell><TableCell>{formatMoney(d.simulatedRevenueVnd)}</TableCell></TableRow>)}</TableBody>
-      </Table></TableContainer>
-      <Typography variant="h6" sx={{ mb: 1 }}>Tổng hợp theo bãi</Typography>
-      <TableContainer component={Card}><Table sx={{ minWidth: 750 }}>
+      </ScrollTable>
+      <Typography component="h2" variant="h6" sx={{ mb: 1 }}>Tổng hợp theo bãi</Typography>
+      <ScrollTable label="Tổng hợp theo bãi" minWidth={700}>
         <TableHead><TableRow>{['Bãi đỗ', 'Lượt vào', 'Lượt ra', 'Phiếu thu', 'Tổng thu', 'Tiền mặt', 'Mô phỏng'].map(t => <TableCell key={t}>{t}</TableCell>)}</TableRow></TableHead>
         <TableBody>{data.lots.map(l => <TableRow key={l.parkingLotId}><TableCell>{l.parkingLotName}{!l.isActive ? ' (ngừng hoạt động)' : ''}</TableCell>
           <TableCell>{l.checkInCount}</TableCell><TableCell>{l.checkOutCount}</TableCell><TableCell>{l.paymentCount}</TableCell><TableCell sx={{ fontWeight: 600 }}>{formatMoney(l.revenueVnd)}</TableCell><TableCell>{formatMoney(l.cashRevenueVnd)}</TableCell><TableCell>{formatMoney(l.simulatedRevenueVnd)}</TableCell></TableRow>)}
           {!data.lots.length && <TableRow><TableCell colSpan={7}>Chưa có bãi đỗ.</TableCell></TableRow>}
         </TableBody>
-      </Table></TableContainer>
+      </ScrollTable>
     </>}
   </Layout>
 }

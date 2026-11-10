@@ -1,11 +1,12 @@
 import PageHeader from '../../components/PageHeader'
 import { useEffect, useState } from 'react'
 import {
-  Alert, Box, Button, Card, Checkbox, Chip, Dialog, DialogActions, DialogContent,
-  DialogTitle, FormControlLabel, MenuItem, Stack, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, TextField, Typography
+  Alert, Box, Button, Checkbox, Chip, Dialog, DialogActions, DialogContent,
+  DialogTitle, FormControlLabel, MenuItem, Stack, TableBody, TableCell,
+  TableHead, TableRow, TextField, Typography
 } from '@mui/material'
 import Layout from '../../components/Layout'
+import ScrollTable from '../../components/ScrollTable'
 import { useAuth } from '../../context/AuthContext'
 import { adminAPI, getErrorMessage } from '../../services/api'
 import { formatParkingTime } from '../../utils/reservationTime'
@@ -79,41 +80,44 @@ export default function ManageUsers() {
   }
   const lotName = id => lots.find(l => l.id === id)?.name ?? `Bãi #${id}`
   return <Layout>
-    <PageHeader title={'Quản lý tài khoản'} description={'Phân quyền, phân công bãi và trạng thái truy cập của người dùng.'} eyebrow="Quản trị hệ thống" action={<Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
+    <PageHeader title="Quản lý tài khoản" description="Phân quyền, phân công bãi và quản lý trạng thái truy cập." action={<Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
         <Button variant="outlined" disabled={loading || mutation.saving} onClick={() => setRevision(r => r + 1)}>Tải lại</Button>
         <Button variant="contained" disabled={loading || !!error || mutation.saving} onClick={() => open()}>Thêm tài khoản</Button>
       </Stack>} />
-    <Box component="form" onSubmit={e => { e.preventDefault(); filter('query', search.trim()) }} sx={{ mb: 3, p: { xs: 2, sm: 2.5 }, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ flexWrap: 'wrap', gap: 2 }}>
-        <TextField select label="Lọc vai trò" value={filters.role} sx={{ minWidth: 180 }} disabled={mutation.saving} onChange={e => filter('role', e.target.value)}>
+    <Box component="form" aria-label="Tìm tài khoản" onSubmit={e => { e.preventDefault(); filter('query', search.trim()) }} sx={{ mb: 2 }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ flexWrap: 'wrap', gap: 1.25 }}>
+        <TextField label="Tìm tên, email, số điện thoại" size="small" value={search} onChange={e => setSearch(e.target.value)} disabled={mutation.saving} sx={{ flex: 1, minWidth: 200 }} slotProps={{ htmlInput: { maxLength: 256 } }} />
+        <TextField select size="small" label="Lọc vai trò" value={filters.role} sx={{ minWidth: 160 }} disabled={mutation.saving} onChange={e => filter('role', e.target.value)}>
           <MenuItem value="all">Tất cả vai trò</MenuItem>{Object.entries(roles).map(([id, label]) => <MenuItem key={id} value={id}>{label}</MenuItem>)}
         </TextField>
-        <TextField select label="Lọc trạng thái" value={filters.active} sx={{ minWidth: 180 }} disabled={mutation.saving} onChange={e => filter('active', e.target.value)}>
+        <TextField select size="small" label="Lọc trạng thái" value={filters.active} sx={{ minWidth: 160 }} disabled={mutation.saving} onChange={e => filter('active', e.target.value)}>
           <MenuItem value="all">Tất cả trạng thái</MenuItem><MenuItem value="true">Hoạt động</MenuItem><MenuItem value="false">Đã khóa</MenuItem>
         </TextField>
-        <TextField label="Tìm tên, email, số điện thoại" value={search} onChange={e => setSearch(e.target.value)} disabled={mutation.saving} sx={{ flex: 1, minWidth: 180 }} slotProps={{ htmlInput: { maxLength: 256 } }} />
-        <Button type="submit" variant="outlined" disabled={mutation.saving}>Tìm kiếm</Button>
+        <Button type="submit" variant="contained" disabled={mutation.saving}>Tìm kiếm</Button>
       </Stack>
     </Box>
     {notice && <Alert severity="success" sx={{ mb: 2 }}>{notice}</Alert>}
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error} Nhấn Tải lại để thử lại.</Alert>}
     {loading ? <Typography role="status">Đang tải dữ liệu...</Typography> : !error && <>
-      <TableContainer component={Card}><Table sx={{ minWidth: 1000 }}>
-        <TableHead><TableRow>{['Họ tên', 'Email / điện thoại', 'Vai trò', 'Bãi phân công', 'Trạng thái', 'Ngày tạo', 'Thao tác'].map(label => <TableCell key={label}>{label}</TableCell>)}</TableRow></TableHead>
+      <ScrollTable label="Danh sách tài khoản" minWidth={940} fixed>
+        <TableHead><TableRow>
+          <TableCell sx={{ width: { xs: 146, lg: '18%' } }}>Họ tên</TableCell><TableCell sx={{ width: { xs: 150, lg: '18%' } }}>Thao tác</TableCell>
+          {['Email / điện thoại', 'Vai trò', 'Bãi phân công', 'Trạng thái', 'Ngày tạo'].map(label => <TableCell key={label}>{label}</TableCell>)}
+        </TableRow></TableHead>
         <TableBody>{users.map(u => <TableRow key={u.id}>
           <TableCell sx={{ fontWeight: 600 }}>{u.name}{u.id === currentUser.id ? ' (Bạn)' : ''}</TableCell>
+          <TableCell><Stack direction="row" sx={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <Button size="small" sx={{ minWidth: 0 }} disabled={mutation.saving} onClick={() => open(u)}>Sửa</Button>
+            <Button size="small" color={u.isActive ? 'warning' : 'success'} disabled={mutation.saving} onClick={() => open(u, true)}>{u.isActive ? 'Khóa tài khoản' : 'Mở khóa'}</Button>
+          </Stack></TableCell>
           <TableCell sx={{ overflowWrap: 'anywhere' }}>{u.email}<Typography variant="body2" sx={{ color: 'text.secondary' }}>{u.phone || '—'}</Typography></TableCell>
           <TableCell><Chip size="small" color={u.role === 'Admin' ? 'secondary' : u.role === 'Staff' ? 'success' : 'primary'} label={roles[u.role]} /></TableCell>
           <TableCell>{u.assignedParkingLotId ? lotName(u.assignedParkingLotId) : '—'}</TableCell>
           <TableCell><Chip size="small" color={u.isActive ? 'success' : 'default'} label={u.isActive ? 'Hoạt động' : 'Đã khóa'} /></TableCell>
           <TableCell>{formatParkingTime(u.createdAt)}</TableCell>
-          <TableCell><Stack sx={{ alignItems: 'flex-start' }}>
-            <Button size="small" disabled={mutation.saving} onClick={() => open(u)}>Sửa</Button>
-            <Button size="small" color={u.isActive ? 'warning' : 'success'} disabled={mutation.saving} onClick={() => open(u, true)}>{u.isActive ? 'Khóa tài khoản' : 'Mở khóa'}</Button>
-          </Stack></TableCell>
         </TableRow>)}{!users.length && <TableRow><TableCell colSpan={7}>Không có tài khoản phù hợp.</TableCell></TableRow>}</TableBody>
-      </Table></TableContainer>
-      <Stack direction="row" spacing={1} sx={{ mt: 2, alignItems: 'center', justifyContent: 'flex-end' }}>
+      </ScrollTable>
+      <Stack direction="row" sx={{ mt: 2, alignItems: 'center', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap' }}>
         <Button disabled={page === 1 || mutation.saving} onClick={() => setPage(p => p - 1)}>Trang trước</Button><Typography>Trang {page}</Typography>
         <Button disabled={users.length < 20 || mutation.saving} onClick={() => setPage(p => p + 1)}>Trang sau</Button>
       </Stack>

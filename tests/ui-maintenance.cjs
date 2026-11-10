@@ -87,6 +87,9 @@ async function metric(label,value) { await page.getByRole('group',{ name:label,e
   await page.screenshot({ path:'.work/staff-parking-desktop.png',fullPage:true,animations:'disabled' });
   await page.setViewportSize({ width:390,height:844 });
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Parking board mobile overflow');
+  const boardBounds=await page.getByRole('region',{ name:'Danh sách vị trí đỗ' }).boundingBox();
+  const maintenanceBounds=await row('R1').getByRole('button',{ name:'Bảo trì',exact:true }).boundingBox();
+  assert(boardBounds && maintenanceBounds && maintenanceBounds.x>=boardBounds.x && maintenanceBounds.x+maintenanceBounds.width<=boardBounds.x+boardBounds.width,'Maintenance action needs horizontal scrolling');
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({ path:'.work/staff-parking-mobile.png',fullPage:true,animations:'disabled' });
   await page.setViewportSize({ width:1440,height:1100 });

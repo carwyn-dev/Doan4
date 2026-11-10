@@ -130,13 +130,18 @@ async function reasonAndSave(reason) {
   await page.screenshot({ path: '.work/admin-slots-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Mobile page overflow');
+  const maintenanceBounds = await row('UI_01').getByRole('button', { name: 'Bảo trì', exact: true }).boundingBox();
+  assert(maintenanceBounds && maintenanceBounds.x >= 0 && maintenanceBounds.x + maintenanceBounds.width <= 390, 'Admin maintenance action needs horizontal scrolling');
   await page.screenshot({ path: '.work/admin-slots-mobile.png', fullPage: true });
-  await page.setViewportSize({ width: 1440, height: 1050 });
 
   await page.goto('/admin/pricing');
   await page.getByRole('heading', { name: 'Giá hiện hành', exact: true }).waitFor();
+  const editPrice = row('Xe máy').getByRole('button', { name: 'Sửa giá', exact: true });
+  const priceBounds = await editPrice.boundingBox();
+  assert(priceBounds && priceBounds.x >= 0 && priceBounds.x + priceBounds.width <= 390, 'Price edit action needs horizontal scrolling');
+  await page.setViewportSize({ width: 1440, height: 1050 });
   const pricesBefore = await apiRead('/admin/pricing?includeHistory=true');
-  await row('Xe máy').getByRole('button', { name: 'Sửa giá', exact: true }).click();
+  await editPrice.click();
   await dialog().getByLabel(/Giá mỗi giờ/).fill('7000');
   await dialog().getByLabel(/Lý do thay đổi/).fill('Điều chỉnh phí UI');
   const priceKeys = []; let lostPrice = false;

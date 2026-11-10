@@ -135,6 +135,8 @@ async function search(value) {
   await page.screenshot({ path: '.work/users-desktop.png', fullPage: true, animations: 'disabled' });
   await page.setViewportSize({ width: 390, height: 844 });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Mobile page overflow');
+  const editBounds = await row(email).getByRole('button', { name: 'Sửa', exact: true }).boundingBox();
+  assert(editBounds && editBounds.x >= 0 && editBounds.x + editBounds.width <= 390, 'Account edit action needs horizontal scrolling');
   await page.screenshot({ path: '.work/users-mobile.png', fullPage: true, animations: 'disabled' });
   await page.setViewportSize({ width: 1440, height: 1100 });
 

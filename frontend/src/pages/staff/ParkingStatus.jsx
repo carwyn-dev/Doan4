@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { Alert, Box, Button, Card, Chip, MenuItem, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@mui/material'
 import Layout from '../../components/Layout'
 import SlotMaintenanceDialog from '../../components/SlotMaintenanceDialog'
-import { StatCards } from '../../components/ReportingWidgets'
 import { getErrorMessage, sessionAPI } from '../../services/api'
 import { formatParkingTime } from '../../utils/reservationTime'
 
@@ -42,49 +41,83 @@ export default function ParkingStatus() {
     && `${s.code} ${s.zoneName} ${s.plateNumber ?? ''}`.toLocaleLowerCase('vi-VN').includes(filters.query.trim().toLocaleLowerCase('vi-VN')))
   const change = (key, value) => setFilters(f => ({ ...f, [key]: value }))
   const active = slots.filter(s => s.isActive)
-  const select = (name, label, options) => <TextField select label={label} value={filters[name]} onChange={e => change(name, e.target.value)} sx={{ minWidth: 180 }}>
+  const select = (name, label, options) => <TextField select label={label} value={filters[name]} onChange={e => change(name, e.target.value)} size="small" fullWidth>
     <MenuItem value="all">Tất cả</MenuItem>{options.map(([value, title]) => <MenuItem key={value} value={value}>{title}</MenuItem>)}
   </TextField>
   return <Layout>
-    <PageHeader title={'Trạng thái bãi và bảo trì'} description={`${slots[0]?.parkingLotName ?? 'Bãi được phân công'} · Tự cập nhật mỗi 30 giây`} eyebrow="Vận hành bãi" action={<Button variant="outlined" disabled={loading} onClick={load}>Làm mới vị trí</Button>} />
+    <PageHeader title="Trạng thái bãi và bảo trì" description={slots[0]?.parkingLotName ?? 'Bãi được phân công'}
+      action={<Button variant="outlined" size="small" disabled={loading} onClick={load}>Làm mới vị trí</Button>} />
     {notice && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setNotice('')}>{notice}</Alert>}
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error} Nhấn Làm mới vị trí để thử lại.</Alert>}
     {loading && <Typography role="status" sx={{ mb: 2 }}>Đang tải trạng thái bãi…</Typography>}
     {loaded && !error && <>
-      <StatCards items={[
-        { label: 'Vị trí hoạt động', value: active.length }, { label: 'Vị trí có xe', value: active.filter(s => s.status === 'OCCUPIED').length },
-        { label: 'Vị trí bảo trì', value: active.filter(s => s.status === 'MAINTENANCE').length },
-        { label: 'Vị trí còn đệm', value: active.filter(s => s.isInBuffer).length }
-      ]} />
-      <Alert severity="info" sx={{ mb: 2 }}>Số liệu trên tính các vị trí hoạt động trong toàn bãi. Chỗ chưa có xe có thể có lịch đặt; số lịch còn hiệu lực không đồng nghĩa với số xe đang gửi. Bảo trì không hủy lịch đặt hoặc xóa thời gian đệm.</Alert>
-      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2, flexWrap: 'wrap', mb: 2, p: 2.5, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 3, alignItems: { xs: 'stretch', sm: 'center' }, '& .MuiTextField-root': { flex: { sm: '1 1 180px' } } }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(4, minmax(0, 1fr))' }, gap: { xs: 1.5, md: 2 }, py: 1.5, mb: 2.5, borderBlock: '1px solid', borderColor: 'divider' }}>
+        {[
+          ['Vị trí hoạt động', active.length],
+          ['Vị trí có xe', active.filter(s => s.status === 'OCCUPIED').length],
+          ['Vị trí bảo trì', active.filter(s => s.status === 'MAINTENANCE').length],
+          ['Vị trí còn đệm', active.filter(s => s.isInBuffer).length],
+        ].map(([label, count]) => (
+          <Box key={label} role="group" aria-label={label}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{label}</Typography>
+            <Typography sx={{ fontWeight: 700, fontSize: 22, fontVariantNumeric: 'tabular-nums' }}>{count}</Typography>
+          </Box>
+        ))}
+      </Box>
+
+      <Stack direction="row" sx={{ alignItems: 'center', gap: 1, mb: 1.5 }}>
+        <TextField label="Tìm mã vị trí, khu hoặc biển số" value={filters.query} onChange={e => change('query', e.target.value)} size="small" slotProps={{ htmlInput: { maxLength: 150 } }} sx={{ minWidth: 0, flex: 1, maxWidth: 360 }} />
+        <Button size="small" onClick={() => setFilters(emptyFilters)}>Xóa bộ lọc</Button>
+      </Stack>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' }, gap: 1.5, mb: 2 }}>
         {select('zone', 'Khu vực', zones)}
         {select('type', 'Loại xe', [['CAR', 'Ô tô'], ['MOTORBIKE', 'Xe máy']])}
         {select('group', 'Nhóm vị trí', [['reserved', 'Đặt trước'], ['walkin', 'Khách trực tiếp']])}
         {select('state', 'Trạng thái vị trí', Object.entries(states).map(([id, value]) => [id, value[0]]))}
-        <TextField label="Tìm mã vị trí, khu hoặc biển số" value={filters.query} onChange={e => change('query', e.target.value)} slotProps={{ htmlInput: { maxLength: 150 } }} sx={{ minWidth: 220, flex: 1 }} />
-        <Button onClick={() => setFilters(emptyFilters)}>Xóa bộ lọc</Button>
-      </Stack>
-      <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>Hiển thị {filtered.length} / {slots.length} vị trí.</Typography>
-      <TableContainer component={Card}><Table sx={{ minWidth: 1100 }}>
-        <TableHead><TableRow>{['Vị trí / khu vực', 'Loại xe / nhóm', 'Vận hành', 'Cấu hình', 'Khoảng đệm', 'Lịch còn hiệu lực', 'Xe đang gửi', 'Thao tác'].map(t => <TableCell key={t}>{t}</TableCell>)}</TableRow></TableHead>
-        <TableBody>{filtered.map(s => {
-          const status = states[s.status] ?? [s.status, 'default']
-          const busy = s.status === 'OCCUPIED' || s.openSessionId !== null
-          return <TableRow key={s.id} aria-label={`${s.zoneName} · ${s.code}`}>
-            <TableCell sx={{ fontWeight: 600 }}>{s.code}<Typography variant="body2" sx={{ color: 'text.secondary' }}>{s.zoneName}{s.floorLabel ? ` · ${s.floorLabel}` : ''}</Typography></TableCell>
-            <TableCell>{s.vehicleType === 'CAR' ? 'Ô tô' : 'Xe máy'}<Typography variant="body2">{s.acceptsReservations ? 'Đặt trước' : 'Khách trực tiếp'}</Typography></TableCell>
-            <TableCell><Chip size="small" label={status[0]} color={status[1]} /></TableCell>
-            <TableCell><Chip size="small" label={s.isActive ? 'Hoạt động' : 'Ngừng hoạt động'} color={s.isActive ? 'success' : 'default'} /></TableCell>
-            <TableCell>{s.isInBuffer ? <><Chip size="small" label="Còn đệm" /><Typography variant="body2">Đến {formatParkingTime(s.bufferUntil)}</Typography></> : '—'}</TableCell>
-            <TableCell>{s.confirmedReservationCount}</TableCell>
-            <TableCell>{s.plateNumber || '—'}{s.openSessionId && s.plateNumber && <Button component={Link} to={`/staff/checkout?query=${encodeURIComponent(s.plateNumber)}`} size="small">Xem lượt gửi</Button>}</TableCell>
-            <TableCell><Button color={s.status === 'MAINTENANCE' ? 'success' : 'warning'} disabled={busy}
-              onClick={() => setAction({ ...s, isMaintenance: s.status !== 'MAINTENANCE' })}>{s.status === 'MAINTENANCE' ? 'Kết thúc bảo trì' : 'Bảo trì'}</Button>
-              {busy && <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>Có xe, chưa thể bảo trì</Typography>}</TableCell>
-          </TableRow>
-        })}{!filtered.length && <TableRow><TableCell colSpan={8}>{slots.length ? 'Không có vị trí phù hợp với bộ lọc.' : 'Chưa có vị trí trong bãi được phân công.'}</TableCell></TableRow>}</TableBody>
-      </Table></TableContainer>
+      </Box>
+
+      <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>Hiển thị {filtered.length} / {slots.length} vị trí. Tự cập nhật mỗi 30 giây.</Typography>
+      <Typography variant="caption" sx={{ display: { xs: 'block', lg: 'none' }, mb: 1, color: 'text.secondary' }}>Cuộn ngang để xem chi tiết vị trí và lượt gửi.</Typography>
+      <TableContainer component={Card} role="region" aria-label="Danh sách vị trí đỗ" tabIndex={0} sx={{ borderRadius: 1, boxShadow: 'none' }}>
+        <Table size="small" sx={{ minWidth: 880, tableLayout: 'fixed', '& .MuiTableCell-root': { px: 1.5, py: 1.25, overflowWrap: 'anywhere' } }}>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ width: { xs: 132, lg: 180 } }}>Vị trí / trạng thái</TableCell>
+              <TableCell sx={{ width: 148 }}>Thao tác</TableCell>
+              {['Loại xe / nhóm', 'Cấu hình', 'Khoảng đệm', 'Lịch còn hiệu lực', 'Xe đang gửi'].map(label => <TableCell key={label}>{label}</TableCell>)}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filtered.map(s => {
+              const status = states[s.status] ?? [s.status, 'default']
+              const busy = s.status === 'OCCUPIED' || s.openSessionId !== null
+              return <TableRow key={s.id} aria-label={`${s.zoneName} · ${s.code}`}>
+                <TableCell>
+                  <Stack direction="row" sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5, mb: 0.5 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{s.code}</Typography>
+                    <Chip size="small" label={status[0]} color={status[1]} />
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{s.zoneName}{s.floorLabel ? ` · ${s.floorLabel}` : ''}</Typography>
+                </TableCell>
+                <TableCell>
+                  <Button size="small" color={s.status === 'MAINTENANCE' ? 'success' : 'warning'} disabled={busy}
+                    onClick={() => setAction({ ...s, isMaintenance: s.status !== 'MAINTENANCE' })}>{s.status === 'MAINTENANCE' ? 'Kết thúc bảo trì' : 'Bảo trì'}</Button>
+                  {busy && <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>Có xe, chưa thể bảo trì</Typography>}
+                </TableCell>
+                <TableCell>{s.vehicleType === 'CAR' ? 'Ô tô' : 'Xe máy'}<Typography variant="body2">{s.acceptsReservations ? 'Đặt trước' : 'Khách trực tiếp'}</Typography></TableCell>
+                <TableCell><Chip size="small" label={s.isActive ? 'Hoạt động' : 'Ngừng hoạt động'} color={s.isActive ? 'success' : 'default'} /></TableCell>
+                <TableCell>{s.isInBuffer ? <><Chip size="small" label="Còn đệm" /><Typography variant="body2">Đến {formatParkingTime(s.bufferUntil)}</Typography></> : '—'}</TableCell>
+                <TableCell>{s.confirmedReservationCount}</TableCell>
+                <TableCell>{s.plateNumber || '—'}{s.openSessionId && s.plateNumber && <Button component={Link} to={`/staff/checkout?query=${encodeURIComponent(s.plateNumber)}`} size="small">Xem lượt gửi</Button>}</TableCell>
+              </TableRow>
+            })}
+            {!filtered.length && <TableRow><TableCell colSpan={7}>{slots.length ? 'Không có vị trí phù hợp với bộ lọc.' : 'Chưa có vị trí trong bãi được phân công.'}</TableCell></TableRow>}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Typography variant="body2" sx={{ mt: 1.5, color: 'text.secondary' }}>
+        Số liệu tổng hợp tính theo các vị trí đang hoạt động trong toàn bãi. Vị trí chưa có xe vẫn có thể còn lịch đặt hoặc khoảng đệm. Bảo trì giữ nguyên lịch đặt và thời gian đệm.
+      </Typography>
     </>}
     <SlotMaintenanceDialog action={action} onClose={() => setAction(null)} onSuccess={async code => {
       setAction(null); setNotice(`Đã lưu thao tác bảo trì cho vị trí ${code}.`); await load()

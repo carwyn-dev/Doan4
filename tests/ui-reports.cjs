@@ -106,6 +106,7 @@ async function range(from,to) {
 
   const staff=await login(fixture.staffEmail,'ReportFixture123!','staff'); page=staff.tab;
   await metric('Vị trí hoạt động',6); await metric('Xe đang gửi',1); await metric('Chỗ chưa có xe',4); await metric('Đặt chỗ còn hiệu lực',1);
+  await metric('Chỗ nhận trực tiếp',2);
   assert.equal(await page.getByRole('group',{ name:'Thu ghi nhận hôm nay',exact:true }).count(),0);
   assert.equal(await page.getByRole('link',{ name:'Báo cáo',exact:true }).count(),0);
   const staffAuth=await data(await staff.context.request.post(api+'/auth/login',{ data:{ email:fixture.staffEmail,password:'ReportFixture123!' } }));
@@ -114,6 +115,7 @@ async function range(from,to) {
   const w2=operations.find(s=>s.code==='W2');
   await data(await staff.context.request.post(api+'/sessions/checkin',{ headers:{ ...hs,'Idempotency-Key':randomUUID() },data:{ slotId:w2.id,plateNumber:'UI'+randomUUID().slice(0,8).replaceAll('-',''),vehicleType:'CAR' } }),201);
   await page.getByRole('button',{ name:'Làm mới',exact:true }).click(); await metric('Xe đang gửi',2); await metric('Chỗ chưa có xe',3);
+  await metric('Chỗ nhận trực tiếp',1);
   await page.screenshot({ path:'.work/dashboard-staff.png',fullPage:true,animations:'disabled' });
 
   const customer=await login(fixture.customerEmail,'ReportFixture123!','customer'); page=customer.tab;

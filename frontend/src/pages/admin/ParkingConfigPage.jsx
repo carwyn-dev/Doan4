@@ -1,11 +1,12 @@
 import PageHeader from '../../components/PageHeader'
 import { useEffect, useState } from 'react'
 import {
-  Alert, Box, Button, Card, Checkbox, Chip, Dialog, DialogActions, DialogContent,
-  DialogTitle, FormControlLabel, MenuItem, Stack, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, TextField, Typography
+  Alert, Box, Button, Checkbox, Chip, Dialog, DialogActions, DialogContent,
+  DialogTitle, FormControlLabel, MenuItem, Stack, TableBody, TableCell,
+  TableHead, TableRow, TextField, Typography
 } from '@mui/material'
 import Layout from '../../components/Layout'
+import ScrollTable from '../../components/ScrollTable'
 import { adminAPI, getErrorMessage } from '../../services/api'
 import { formatParkingTime } from '../../utils/reservationTime'
 import useAdminMutation from './useAdminMutation'
@@ -107,16 +108,16 @@ export default function ParkingConfigPage({ kind }) {
     onChange={e => field(name, e.target.value)} slotProps={{ htmlInput: { maxLength } }} />
 
   return <Layout>
-    <PageHeader title={`Quản lý ${labels[kind]}`} description={'Cấu hình hoạt động và giữ lịch sử giao dịch của bãi đỗ.'} eyebrow="Quản trị hệ thống" action={<Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
+    <PageHeader title={`Quản lý ${labels[kind]}`} description={{ lot: 'Địa chỉ và trạng thái của từng bãi.', zone: 'Phân khu theo tầng và loại xe.', slot: 'Phân nhóm đặt trước, khách trực tiếp và bảo trì.' }[kind]} action={<Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
         <Button variant="outlined" disabled={loading || mutation.saving} onClick={() => setRevision(r => r + 1)}>Tải lại</Button>
         <Button variant="contained" disabled={loading || !!error || !parentReady || mutation.saving} onClick={() => open()}>Thêm {labels[kind]}</Button>
       </Stack>} />
     {kind !== 'lot' && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
-      <TextField select label="Bãi đỗ xe" value={lotId} sx={{ minWidth: 220 }} disabled={mutation.saving || loading}
+      <TextField select size="small" label="Bãi đỗ xe" value={lotId} sx={{ minWidth: 220 }} disabled={mutation.saving || loading}
         onChange={e => { setLotId(e.target.value); setZoneId(''); setZones([]) }}>
         {lots.map(r => <MenuItem key={r.id} value={r.id}>{r.name}{!r.isActive ? ' (ngừng hoạt động)' : ''}</MenuItem>)}
       </TextField>
-      {kind === 'slot' && <TextField select label="Khu vực" value={zoneId} sx={{ minWidth: 220 }} disabled={mutation.saving || loading}
+      {kind === 'slot' && <TextField select size="small" label="Khu vực" value={zoneId} sx={{ minWidth: 220 }} disabled={mutation.saving || loading}
         onChange={e => setZoneId(e.target.value)}>
         {zones.map(r => <MenuItem key={r.id} value={r.id}>{r.name} · {types[r.vehicleType]}{!r.isActive ? ' (ngừng hoạt động)' : ''}</MenuItem>)}
       </TextField>}
@@ -126,17 +127,22 @@ export default function ParkingConfigPage({ kind }) {
     {!loading && !error && !parentReady && <Alert severity="info" sx={{ mb: 2 }}>
       {lot && (kind === 'zone' || zone) ? 'Kích hoạt bãi và khu vực cha trước khi sửa hoặc thêm cấu hình bên trong.' : 'Tạo bãi và khu vực trước khi thêm vị trí đỗ.'}
     </Alert>}
-    {loading ? <Typography role="status">Đang tải dữ liệu...</Typography> : !error && <TableContainer component={Card}>
-      <Table sx={{ minWidth: kind === 'slot' ? 850 : 720 }}>
+    {loading ? <Typography role="status">Đang tải dữ liệu…</Typography> : !error && <ScrollTable label={`Danh sách ${labels[kind]}`} minWidth={kind === 'slot' ? 760 : 650} fixed>
         <TableHead><TableRow>
-          <TableCell>{kind === 'slot' ? 'Mã vị trí' : 'Tên'}</TableCell>
+          <TableCell sx={{ width: { xs: 132, lg: '19%' } }}>{kind === 'slot' ? 'Mã vị trí' : 'Tên'}</TableCell>
+          <TableCell sx={{ width: { xs: 164, lg: '25%' } }}>Thao tác</TableCell>
           {kind === 'lot' ? <><TableCell>Địa chỉ</TableCell><TableCell>Khu vực / vị trí</TableCell></> : kind === 'zone' ?
             <><TableCell>Tầng</TableCell><TableCell>Loại xe / vị trí</TableCell></> :
             <><TableCell>Nhóm vị trí</TableCell><TableCell>Vận hành / khoảng đệm</TableCell></>}
-          <TableCell>Trạng thái</TableCell><TableCell>Thao tác</TableCell>
+          <TableCell>Trạng thái</TableCell>
         </TableRow></TableHead>
         <TableBody>{rows.map(r => <TableRow key={r.id}>
           <TableCell sx={{ fontWeight: 600 }}>{r.name ?? r.code}</TableCell>
+          <TableCell><Stack direction="row" sx={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <Button size="small" sx={{ minWidth: 0 }} disabled={!parentReady || mutation.saving} onClick={() => open(r)}>Sửa</Button>
+            <Button size="small" color={r.isActive ? 'warning' : 'success'} disabled={!parentReady || mutation.saving} onClick={() => open(r, true)}>{r.isActive ? 'Ngừng hoạt động' : 'Kích hoạt lại'}</Button>
+            {kind === 'slot' && <Button size="small" disabled={mutation.saving || r.operationalStatus === 'OCCUPIED'} onClick={() => open(r, false, true)}>{r.operationalStatus === 'MAINTENANCE' ? 'Kết thúc bảo trì' : 'Bảo trì'}</Button>}
+          </Stack></TableCell>
           {kind === 'lot' ? <><TableCell>{r.address}</TableCell><TableCell>{r.zoneCount} khu · {r.slotCount} vị trí<br />{r.activeSlotCount} vị trí hoạt động</TableCell></> : kind === 'zone' ?
             <><TableCell>{r.floorLabel || '—'}</TableCell><TableCell>{types[r.vehicleType]} · {r.slotCount} vị trí</TableCell></> :
             <><TableCell>{r.acceptsReservations ? 'Đặt trước' : 'Khách trực tiếp'}</TableCell><TableCell>
@@ -144,16 +150,10 @@ export default function ParkingConfigPage({ kind }) {
               {r.bufferUntil && new Date(r.bufferUntil) > new Date() && <Typography variant="caption" component="div">Đệm đến {formatParkingTime(r.bufferUntil)}</Typography>}
             </TableCell></>}
           <TableCell>{activeChip(r.isActive)}</TableCell>
-          <TableCell><Stack sx={{ alignItems: 'flex-start' }}>
-            <Button size="small" disabled={!parentReady || mutation.saving} onClick={() => open(r)}>Sửa</Button>
-            <Button size="small" color={r.isActive ? 'warning' : 'success'} disabled={!parentReady || mutation.saving} onClick={() => open(r, true)}>{r.isActive ? 'Ngừng hoạt động' : 'Kích hoạt lại'}</Button>
-            {kind === 'slot' && <Button size="small" disabled={mutation.saving || r.operationalStatus === 'OCCUPIED'} onClick={() => open(r, false, true)}>{r.operationalStatus === 'MAINTENANCE' ? 'Kết thúc bảo trì' : 'Bảo trì'}</Button>}
-          </Stack></TableCell>
         </TableRow>)}
           {!rows.length && <TableRow><TableCell colSpan={5}>Chưa có {labels[kind]} trong lựa chọn này.</TableCell></TableRow>}
         </TableBody>
-      </Table>
-    </TableContainer>}
+    </ScrollTable>}
     <Dialog open={!!dialog} onClose={() => !mutation.saving && setDialog(null)} fullWidth maxWidth="sm">
       <Box component="form" onSubmit={submit}>
         <DialogTitle>{dialog?.maintenance ? (form.isMaintenance ? 'Bảo trì vị trí' : 'Kết thúc bảo trì') : `${dialog?.id ? 'Sửa' : 'Thêm'} ${labels[kind]}`}</DialogTitle>
