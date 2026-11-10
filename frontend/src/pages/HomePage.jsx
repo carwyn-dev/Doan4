@@ -1,63 +1,64 @@
 import { Link } from 'react-router-dom'
-import { Box, Button, Typography, Container, Stack } from '@mui/material'
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
-import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
-import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined'
-import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
+import { Box, Button, Container, Stack, Typography } from '@mui/material'
 import Brand from '../components/Brand'
-import ParkingIllustration from '../components/ParkingIllustration'
 
-const features = [
-  { icon: <EventAvailableOutlinedIcon />, title: 'Chủ động trước khi đến', desc: 'Chọn bãi, phương tiện và khung giờ. Tra cứu vị trí phù hợp rồi xác nhận đặt chỗ.' },
-  { icon: <DirectionsCarOutlinedIcon />, title: 'Theo dõi từng lượt xe', desc: 'Nhận xe bằng mã đặt chỗ hoặc tiếp nhận trực tiếp. Theo dõi trạng thái của từng vị trí.' },
-  { icon: <ReceiptLongOutlinedIcon />, title: 'Chi phí rõ ràng', desc: 'Phí gửi xe được tính theo thời gian và bảng giá. Xem lịch sử gửi xe và phiếu thu của bạn.' },
+const bookingSteps = [
+  ['Chọn xe và khung giờ', 'Đăng nhập, thêm phương tiện rồi chọn bãi và thời gian dự kiến gửi.'],
+  ['Đặt vị trí', 'Chọn chỗ còn trống và lưu mã đặt chỗ để tra cứu khi đến bãi.'],
+  ['Nhận và trả xe', 'Đọc mã đặt chỗ cho nhân viên khi vào bãi. Thanh toán tại quầy khi lấy xe.'],
 ]
+
 export default function HomePage() {
-  return <Box sx={{ bgcolor: '#fafcfb' }}>
-    <Box component="header" sx={{ borderBottom: '1px solid', borderColor: 'divider', bgcolor: '#fff' }}>
-      <Container maxWidth="lg" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, py: 2 }}>
-        <Brand />
-        <Stack direction="row" sx={{ gap: 1 }}>
-          <Button component={Link} to="/login" sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: 'text.primary' }}>Đăng nhập</Button>
-          <Button component={Link} to="/register" variant="contained" endIcon={<ArrowForwardRoundedIcon />}>Đăng ký</Button>
-        </Stack>
-      </Container>
-    </Box>
-    <Box component="main">
-      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.05fr 1fr' }, gap: { xs: 5, md: 7 }, alignItems: 'center' }}>
-          <Box>
-            <Typography sx={{ color: 'primary.main', fontSize: 11, letterSpacing: '.14em', fontWeight: 700, mb: 2.5 }}>QUẢN LÝ BÃI ĐỖ XE TRỰC TUYẾN</Typography>
-            <Typography component="h1" sx={{ fontWeight: 700, fontSize: { xs: 40, sm: 52, lg: 60 }, lineHeight: 1.13, letterSpacing: '-.045em', mb: 3 }}>Bớt tìm chỗ đỗ.<br /><Box component="span" sx={{ color: 'primary.main' }}>Thêm thảnh thơi.</Box></Typography>
-            <Typography sx={{ color: 'text.secondary', maxWidth: 430, fontSize: 16, lineHeight: 1.8, mb: 4 }}>Đặt chỗ trước khi khởi hành. Quản lý phương tiện, theo dõi lịch gửi và tra cứu chi phí ngay trên một nền tảng.</Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 1.5, alignItems: { xs: 'stretch', sm: 'center' } }}>
-              <Button component={Link} to="/login" variant="contained" size="large" endIcon={<ArrowForwardRoundedIcon />} sx={{ py: 1.6, px: 3 }}>Tìm chỗ đỗ ngay</Button>
-              <Button component={Link} to="/register" variant="outlined" size="large" sx={{ py: 1.6, px: 3 }}>Tạo tài khoản</Button>
-            </Stack>
-            <Stack direction="row" sx={{ mt: 4, gap: 2, flexWrap: 'wrap', color: 'text.secondary', fontSize: 12 }}><span>● Ô tô & xe máy</span><span>● Đặt chỗ theo khung giờ</span></Stack>
-          </Box>
-          <Box sx={{ bgcolor: '#142e38', borderRadius: 6, p: { xs: 2, sm: 3 }, boxShadow: '0 22px 50px #142e3818', transform: { md: 'rotate(-2deg)' } }}><ParkingIllustration /></Box>
-        </Box>
-      </Container>
-      <Box sx={{ borderTop: '1px solid', borderBottom: '1px solid', borderColor: 'divider', bgcolor: '#fff' }}>
-        <Container maxWidth="lg" sx={{ py: { xs: 5, md: 7 } }}>
-          <Typography sx={{ fontSize: 11, color: 'primary.main', fontWeight: 700, letterSpacing: '.12em', mb: 1 }}>TỪ LÚC ĐẶT CHỖ ĐẾN KHI XE RA</Typography>
-          <Typography component="h2" variant="h4" sx={{ mb: 4 }}>Mọi bước đều rõ ràng.</Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: { xs: 3, md: 5 } }}>
-            {features.map((f, i) => <Box key={f.title}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}><Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: '#edf6f2', color: 'primary.main', display: 'grid', placeItems: 'center' }}>{f.icon}</Box><Typography sx={{ color: '#b6c8ca', fontWeight: 500, fontSize: 13 }}>0{i+1}</Typography></Box>
-              <Typography component="h3" variant="h6" sx={{ mb: 1 }}>{f.title}</Typography><Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{f.desc}</Typography>
-            </Box>)}
-          </Box>
+  return (
+    <Box sx={{ bgcolor: 'background.paper', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Box component="header" sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Container maxWidth="md" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, py: 1.5 }}>
+          <Brand />
+          <Button component={Link} to="/login" variant="outlined">Đăng nhập</Button>
         </Container>
       </Box>
-      <Container maxWidth="lg" sx={{ py: { xs: 5, md: 7 } }}>
-        <Box sx={{ bgcolor: '#eaf3ef', borderRadius: 4, p: { xs: 3, md: 5 }, display: 'flex', alignItems: { md: 'center' }, justifyContent: 'space-between', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
-          <Box><Typography component="h2" variant="h5" sx={{ mb: 1 }}>Sẵn sàng cho hành trình tiếp theo?</Typography><Typography sx={{ color: 'text.secondary', fontSize: 14 }}>Tạo tài khoản, thêm phương tiện và chọn chỗ đỗ phù hợp.</Typography></Box>
-          <Button component={Link} to="/register" variant="contained" endIcon={<ArrowForwardRoundedIcon />} sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}>Đăng ký ngay</Button>
+
+      <Container component="main" maxWidth="md" sx={{ flex: 1, py: { xs: 4, md: 8 } }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { md: 'minmax(0, 1.12fr) minmax(0, 1fr)' }, gap: { xs: 4, md: 6 }, alignItems: 'start' }}>
+          <Box>
+            <Typography component="h1" variant="h3" sx={{ fontSize: { xs: 30, md: 42 }, lineHeight: 1.2, mb: 2, textWrap: 'balance' }}>
+              Quản lý bãi đỗ xe trực tuyến
+            </Typography>
+            <Typography sx={{ color: 'text.secondary', mb: 3 }}>
+              Tìm và đặt chỗ cho ô tô hoặc xe máy theo khung giờ. Xem lại lịch đặt, lượt gửi xe và phiếu thu trong tài khoản của bạn.
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 1 }}>
+              <Button component={Link} to="/login" variant="contained">Đăng nhập để đặt chỗ</Button>
+              <Button component={Link} to="/register" variant="outlined">Đăng ký tài khoản</Button>
+            </Stack>
+          </Box>
+
+          <Box component="section" aria-labelledby="booking-steps" sx={{ borderTop: '1px solid', borderColor: 'divider', pt: 2 }}>
+            <Typography id="booking-steps" component="h2" variant="h6" sx={{ mb: 2 }}>Quy trình đặt và gửi xe</Typography>
+            <Box component="ol" sx={{ m: 0, pl: 2.5, '& li::marker': { color: 'primary.dark', fontWeight: 700 } }}>
+              {bookingSteps.map(([title, description]) => (
+                <Box component="li" key={title} sx={{ pl: 0.5, mb: 2, '&:last-child': { mb: 0 } }}>
+                  <Typography sx={{ fontWeight: 600, fontSize: 14 }}>{title}</Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>{description}</Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        </Box>
+
+        <Box component="section" aria-labelledby="walk-in" sx={{ borderTop: '1px solid', borderColor: 'divider', mt: 4, pt: 2.5 }}>
+          <Typography id="walk-in" component="h2" variant="h6" sx={{ mb: 0.5 }}>Gửi xe trực tiếp</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: '70ch' }}>
+            Nếu đến bãi mà chưa đặt chỗ, bạn có thể gặp nhân viên để kiểm tra vị trí dành cho khách gửi trực tiếp.
+          </Typography>
         </Box>
       </Container>
+
+      <Box component="footer" sx={{ borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.default' }}>
+        <Container maxWidth="md" sx={{ py: 2 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>ParkingLot — Đồ án 4</Typography>
+        </Container>
+      </Box>
     </Box>
-    <Box component="footer" sx={{ borderTop: '1px solid', borderColor: 'divider' }}><Container maxWidth="lg" sx={{ py: 3, display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}><Typography sx={{ color: 'text.secondary', fontSize: 12 }}>© 2026 ParkingLot · Quản lý bãi đỗ xe trực tuyến</Typography><Typography sx={{ color: 'text.secondary', fontSize: 12 }}>Đồ án 4</Typography></Container></Box>
-  </Box>
+  )
 }

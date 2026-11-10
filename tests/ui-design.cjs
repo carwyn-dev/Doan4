@@ -48,7 +48,7 @@ async function inspect(page, name) {
     await page.goto(path); await inspect(page, name);
   }
   // Check the public entry links and password visibility without submitting.
-  await page.goto('/'); await page.getByRole('link', { name: 'Tìm chỗ đỗ ngay', exact: true }).click();
+  await page.goto('/'); await page.getByRole('link', { name: 'Đăng nhập để đặt chỗ', exact: true }).click();
   await page.waitForURL('**/login');
   await page.getByLabel(/Mật khẩu/).fill('Visibility123!');
   await page.getByRole('button', { name: 'Hiện mật khẩu', exact: true }).click();
@@ -72,7 +72,7 @@ async function inspect(page, name) {
     const c = await browser.newContext({ baseURL: ui, viewport: sizes[3], timezoneId: 'UTC' });
     const p = await c.newPage(); watch(p);
     await p.goto('/login');
-    const demo = { admin: 'Admin', staff: 'Nhân viên', customer: 'Khách hàng' }[role];
+    const demo = { admin: 'Quản trị viên', staff: 'Nhân viên', customer: 'Khách hàng' }[role];
     await p.getByRole('button', { name: demo, exact: true }).click();
     await p.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
     await p.waitForURL(`**/${role}/dashboard`);
@@ -83,7 +83,7 @@ async function inspect(page, name) {
     }
     await p.setViewportSize(sizes[1]);
     await p.getByRole('button', { name: 'Mở menu', exact: true }).click();
-    await p.getByRole('navigation', { name: 'Điều hướng chính' }).getByRole('link', { name: 'Dashboard', exact: true }).click();
+    await p.getByRole('navigation', { name: 'Điều hướng chính' }).getByRole('link', { name: role === 'staff' ? 'Quầy trực bãi' : 'Tổng quan', exact: true }).click();
     await p.waitForURL(`**/${role}/dashboard`);
     await p.getByRole('navigation', { name: 'Điều hướng chính' }).waitFor({ state: 'hidden' });
     // The skip link is the first keyboard destination in the application shell.

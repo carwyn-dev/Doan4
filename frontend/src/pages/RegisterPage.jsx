@@ -34,19 +34,17 @@ function RegisterPage() {
   }
 
   return <AuthShell>
-    <Typography sx={{ fontSize: 11, letterSpacing: '.12em', fontWeight: 700, color: 'primary.main', mb: 1.5 }}>BẮT ĐẦU CÙNG PARKINGLOT</Typography>
     <Typography component="h1" variant="h4">Đăng ký tài khoản</Typography>
-    <Typography sx={{ color: 'text.secondary', fontSize: 14, mt: 1, mb: 3 }}>Lưu phương tiện và đặt chỗ cho chuyến đi của bạn.</Typography>
+    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, mb: 2.5 }}>Tạo tài khoản khách hàng để lưu xe và đặt chỗ.</Typography>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-    <Box component="form" onSubmit={handleSubmit} sx={{ display: 'grid', gap: 2.5 }}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ display: 'grid', gap: 2 }}>
       <TextField label="Họ tên" name="name" fullWidth value={formData.name} onChange={handleChange} required autoComplete="name" />
       <TextField label="Email" name="email" type="email" fullWidth value={formData.email} onChange={handleChange} required autoComplete="email" />
       <TextField label="Số điện thoại" name="phone" type="tel" fullWidth value={formData.phone} onChange={handleChange} required autoComplete="tel" />
       <TextField label="Mật khẩu" name="password" type="password" fullWidth value={formData.password} onChange={handleChange} required autoComplete="new-password" helperText="Mật khẩu cần ít nhất 8 ký tự." />
       <Button type="submit" variant="contained" fullWidth size="large" disabled={loading} sx={{ py: 1.5 }}>{loading ? 'Đang xử lý...' : 'Đăng ký'}</Button>
     </Box>
-    <Typography variant="body2" sx={{ textAlign: 'center', mt: 3 }}>Đã có tài khoản? <Link to="/login" style={{ color: '#087f73', fontWeight: 700 }}>Đăng nhập</Link></Typography>
-    <Button component={Link} to="/" size="small" sx={{ mt: 2, color: 'text.secondary' }}>← Về trang chủ</Button>
+    <Typography variant="body2" sx={{ mt: 2 }}>Đã có tài khoản? <Link to="/login" style={{ color: '#087f73', fontWeight: 700 }}>Đăng nhập</Link></Typography>
   </AuthShell>
 }
 export default RegisterPage
